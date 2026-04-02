@@ -1,0 +1,127 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/organisms">Organismes</a><span class="crumb-sep">›</span><span>Détail</span>
+          </div>
+
+          <div class="title-row">
+            <h1>Modifier un organisme</h1>
+
+            <span class="pill" [ngClass]="form.value.archived ? 'pill-archived' : 'pill-active'">
+              {{ form.value.archived ? 'Archivé' : 'Actif' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/organisms">Retour</a>
+
+          <button
+            class="btn-outline"
+            type="button"
+            (click)="toggleArchive()"
+            [disabled]="loading || saving"
+          >
+            {{ form.value.archived ? 'Désarchiver' : 'Archiver' }}
+          </button>
+
+          <button
+            class="btn-primary"
+            type="button"
+            (click)="save()"
+            [disabled]="loading || saving"
+          >
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+
+          <button
+            class="btn-danger"
+            type="button"
+            (click)="delete()"
+            [disabled]="loading || saving"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="form-card" *ngIf="!loading; else loadingTpl">
+        <div class="meta" *ngIf="item">
+          <div>
+            <b>Créé :</b> {{ formatDate(item.createdAt) }}
+            <span class="muted">{{ item.createdBy || '' }}</span>
+          </div>
+          <div>
+            <b>Mis à jour :</b> {{ formatDate(item.updatedAt) }}
+            <span class="muted">{{ item.updatedBy || '' }}</span>
+          </div>
+        </div>
+
+        <div class="error" *ngIf="error">{{ error }}</div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Nom <span class="req">*</span></label>
+            <input type="text" [formControl]="form.controls.name" placeholder="Nom de l'organisme" />
+            <div class="field-error" *ngIf="form.controls.name.touched && form.controls.name.invalid">
+              Le nom est requis.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Abréviation</label>
+            <input type="text" [formControl]="form.controls.abbreviation" placeholder="Optionnel" />
+          </div>
+
+          <div class="field full">
+            <label>Secteurs associés</label>
+            <ul class="multi-list">
+              <li
+                *ngFor="let s of sectors"
+                [class.selected]="(form.value.sectorIds || []).includes(s.id!)"
+                (click)="toggleItem(s.id!, 'sectorIds')"
+              >{{ s.name }}</li>
+            </ul>
+            <div class="hint">Cliquez pour sélectionner / désélectionner</div>
+          </div>
+
+          <div class="field full">
+            <label>Centres pilotes associés</label>
+            <ul class="multi-list">
+              <li
+                *ngFor="let pc of pilotCenters"
+                [class.selected]="(form.value.pilotCenterIds || []).includes(pc.id!)"
+                (click)="toggleItem(pc.id!, 'pilotCenterIds')"
+              >{{ pc.name }}</li>
+            </ul>
+            <div class="hint">Cliquez pour sélectionner / désélectionner</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            class="btn-primary"
+            type="button"
+            (click)="save()"
+            [disabled]="loading || saving"
+          >
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+
+          <a class="btn-ghost" routerLink="/organisms">Annuler</a>
+        </div>
+      </div>
+
+      <ng-template #loadingTpl>
+        <div class="form-card">Chargement…</div>
+      </ng-template>
+    </main>
+  </div>
+</div>

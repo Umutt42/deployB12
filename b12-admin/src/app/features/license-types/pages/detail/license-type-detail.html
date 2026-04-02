@@ -1,0 +1,82 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/license-types">Types de phytolicences</a><span class="crumb-sep">›</span><span>Détail</span>
+          </div>
+          <div class="title-row">
+            <h1>Modifier un type de phytolicence</h1>
+            <span class="pill" [ngClass]="archived ? 'pill-archived' : 'pill-active'">
+              {{ archived ? 'Archivé' : 'Actif' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/license-types">Retour</a>
+
+          <button class="btn-outline" type="button" (click)="toggleArchive()" [disabled]="loading || saving">
+            {{ archived ? 'Désarchiver' : 'Archiver' }}
+          </button>
+
+          <button class="btn-primary" type="button" (click)="save()" [disabled]="loading || saving">
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+
+          <button class="btn-danger" type="button" (click)="delete()" [disabled]="loading || saving">
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="form-card" *ngIf="!loading; else loadingTpl">
+        <div class="meta" *ngIf="lt">
+          <div>
+            <b>Créé :</b> {{ formatDate(lt.createdAt) }}
+          </div>
+          <div>
+            <b>Mis à jour :</b> {{ formatDate(lt.updatedAt) }}
+            <span class="muted">{{ $any(lt).updatedBy || '' }}</span>
+          </div>
+        </div>
+
+        <div class="error" *ngIf="error">{{ error }}</div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Code</label>
+            <input type="text" [(ngModel)]="code" name="code" disabled />
+            <div class="hint">Le code est généralement fixe (NP, P1…).</div>
+          </div>
+
+          <div class="field">
+            <label>Label <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="label" name="label" />
+          </div>
+
+          <div class="field full">
+            <label>Description</label>
+            <textarea rows="3" [(ngModel)]="description" name="description"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="button" (click)="save()" [disabled]="loading || saving">
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+          <a class="btn-ghost" routerLink="/license-types">Annuler</a>
+        </div>
+      </div>
+
+      <ng-template #loadingTpl>
+        <div class="form-card">Chargement…</div>
+      </ng-template>
+    </main>
+  </div>
+</div>

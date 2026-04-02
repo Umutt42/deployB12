@@ -1,0 +1,161 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ===================================================
+   CENTER-ACCREDITATIONS — spécifique
+=================================================== */
+
+.head-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--primary);
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-stats:hover { background: #eef2f7; border-color: var(--primary); }
+
+/* Year tabs */
+.year-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.year-tab {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #cfd9e2;
+  background: #fff;
+  color: #1b6ea8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.year-tab:hover {
+  background: #eef6ff;
+  border-color: #9ec5fe;
+}
+
+.year-tab.active {
+  background: #4a7d96;
+  color: #fff;
+  border-color: #3c6a80;
+}
+
+/* Table min-width */
+.data-table { min-width: 2800px; }
+
+/* Column widths */
+.col-name          { width: 160px; }
+.col-companynumber { width: 150px; }
+.col-siteaddresses { width: 200px; }
+.col-receiveddate  { width: 140px; }
+.col-status        { width: 130px; }
+.col-accreditnumber { width: 120px; }
+.col-startdate     { width: 140px; }
+.col-enddate       { width: 140px; }
+.col-bool          { width: 90px; }
+.col-pilotcenters  { width: 190px; }
+.col-sectors       { width: 190px; }
+.col-contacts      { width: 190px; }
+.col-hqcity        { width: 210px; }
+.col-created       { width: 180px; }
+.col-updated       { width: 180px; }
+.col-updatedby     { width: 160px; }
+
+/* Multi-value columns */
+.col-siteaddresses,
+.col-pilotcenters,
+.col-sectors,
+.col-contacts {
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+/* Siège social */
+.hq { white-space: normal; }
+.hq-main { font-weight: 700; color: #1f2a33; line-height: 1.2; }
+.hq-sub  { margin-top: 2px; font-size: 12px; line-height: 1.2; }
+
+/* End date coloring */
+.date-ok            { color: #2e7d32; font-weight: 700; }
+.date-expiring-soon { color: #ff8c00; font-weight: 700; }
+.date-expired       { color: #c62828; font-weight: 700; }
+
+/* Request status pills */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.status-accepted { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+.status-refused  { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
+.status-received { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+.status-pending  { background: #fff8e1; color: #e65100; border-color: #ffecb3; }
+
+/* ===================================================
+   PAGINATION
+=================================================== */
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #cfd9e2;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a3b47;
+}
+
+.page-btn:hover:not(:disabled) { background: #f3f7fb; }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+.page-btn.active {
+  background: #4a7d96;
+  color: #fff;
+  border-color: #3c6a80;
+}
+
+.page-ellipsis {
+  padding: 0 4px;
+  color: #6c7a86;
+}

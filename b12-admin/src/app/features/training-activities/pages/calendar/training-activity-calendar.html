@@ -1,0 +1,148 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \
+            <a routerLink="/training-activities">Activités de formation</a> \
+            Calendrier
+          </div>
+          <h1>Calendrier des activités</h1>
+        </div>
+        <a class="btn-secondary" routerLink="/training-activities">← Liste</a>
+      </div>
+
+      <!-- Navigation mensuelle -->
+      <div class="cal-nav">
+        <button class="nav-btn" (click)="prevMonth()">‹</button>
+        <span class="cal-title">{{ monthLabel }}</span>
+        <button class="nav-btn" (click)="nextMonth()">›</button>
+        <button class="today-btn" (click)="goToToday()">Aujourd'hui</button>
+      </div>
+
+      <div *ngIf="loading" class="cal-status">Chargement…</div>
+      <div *ngIf="error"   class="cal-error">{{ error }}</div>
+
+      <!-- Grille calendrier -->
+      <div *ngIf="!loading && !error" class="cal-card">
+        <div class="cal-grid">
+
+          <div *ngFor="let d of WEEKDAYS" class="cal-header-cell">{{ d }}</div>
+
+          <ng-container *ngFor="let week of weeks">
+            <div
+              *ngFor="let day of week"
+              class="cal-day"
+              [class.out-month]="!day.inMonth"
+              [class.today]="day.isToday"
+            >
+              <span class="day-number">{{ day.date.getDate() }}</span>
+
+              <!-- Chip : label tronqué + bouton œil -->
+              <div *ngFor="let a of day.activities" class="event-chip" [class.chip-online]="a.online" [class.chip-phyto]="a.phytodama">
+                <span class="chip-label" [title]="chipLabel(a)">{{ chipLabel(a) }}</span>
+                <button class="chip-eye" (click)="openModal(a)" title="Voir les détails">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+                    <path d="M10 3C5 3 1.73 7.11 1.05 9.76a1 1 0 0 0 0 .48C1.73 12.89 5 17 10 17s8.27-4.11 8.95-6.76a1 1 0 0 0 0-.48C18.27 7.11 15 3 10 3zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODAL DÉTAIL ACTIVITÉ
+════════════════════════════════════════════════ -->
+<div *ngIf="selectedActivity" class="modal-overlay" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+
+    <!-- En-tête -->
+    <div class="modal-header">
+      <div class="modal-title">{{ selectedActivity.trainingAccreditationLabel ?? '#' + selectedActivity.id }}</div>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <!-- Corps -->
+    <div class="modal-body">
+
+      <div *ngIf="selectedActivity.centerAccreditationLabel" class="detail-row">
+        <span class="detail-label">Centre</span>
+        <span>{{ selectedActivity.centerAccreditationLabel }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Date début</span>
+        <span>{{ formatLocalDate(selectedActivity.startDate) }}</span>
+      </div>
+
+      <div *ngIf="selectedActivity.endDate" class="detail-row">
+        <span class="detail-label">Date fin</span>
+        <span>{{ formatLocalDate(selectedActivity.endDate) }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Lieu</span>
+        <span *ngIf="!selectedActivity.online">{{ addressLine(selectedActivity) }}</span>
+        <span *ngIf="selectedActivity.online" class="badge-online">En ligne</span>
+      </div>
+
+      <div *ngIf="selectedActivity.province" class="detail-row">
+        <span class="detail-label">Province</span>
+        <span>{{ selectedActivity.province }}</span>
+      </div>
+
+      <div *ngIf="selectedActivity.numberOfParticipants != null" class="detail-row">
+        <span class="detail-label">Participants</span>
+        <span>{{ selectedActivity.numberOfParticipants }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Prix membre</span>
+        <span>{{ selectedActivity.memberPrice ?? 0 | number:'1.2-2' }} €</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Prix non-membre</span>
+        <span>{{ selectedActivity.nonMemberPrice ?? 0 | number:'1.2-2' }} €</span>
+      </div>
+
+      <div *ngIf="selectedActivity.themeLabels?.length" class="detail-row">
+        <span class="detail-label">Thèmes</span>
+        <span>{{ selectedActivity.themeLabels!.join(', ') }}</span>
+      </div>
+
+      <div *ngIf="selectedActivity.licenseTypeLabels?.length" class="detail-row">
+        <span class="detail-label">Licences</span>
+        <span>{{ selectedActivity.licenseTypeLabels!.join(', ') }}</span>
+      </div>
+
+      <div class="detail-badges">
+        <span *ngIf="selectedActivity.phytodama"  class="badge-phyto">Phytodama</span>
+        <span *ngIf="selectedActivity.initial"    class="badge-type">Initiale</span>
+        <span *ngIf="selectedActivity.continuous" class="badge-type">Continue</span>
+      </div>
+
+    </div>
+
+    <!-- Pied -->
+    <div class="modal-footer">
+      <a [routerLink]="['/training-activities', selectedActivity.id]" class="btn-primary-sm">
+        Voir le détail →
+      </a>
+      <button class="btn-cancel" (click)="closeModal()">Fermer</button>
+    </div>
+
+  </div>
+</div>

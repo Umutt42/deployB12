@@ -1,0 +1,39 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ===================================================
+   LICENSE-TYPES — spécifique
+=================================================== */
+
+.data-table { min-width: 1000px; }
+
+/* checkbox légèrement plus petite */
+.check { width: 36px; }
+
+/* sticky-code (colonne "Nom"/code) au lieu de sticky-name */
+.sticky-code {
+  position: sticky;
+  left: 36px; /* = largeur .check */
+  z-index: 9;
+  background: #fff;
+  box-shadow: 2px 0 0 rgba(215, 223, 230, 0.9);
+}
+
+.data-table thead th.sticky-code { z-index: 11; }
+
+/* Colonnes */
+.col-code { width: 120px; }
+
+.col-desc {
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-height: 1.4;
+}
+
+/* cellules corps alignées en haut (contenu multi-ligne) */
+.data-table tbody td {
+  vertical-align: top;
+}
+

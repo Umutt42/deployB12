@@ -1,0 +1,2019 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main" #statsContent>
+
+      <!-- ── En-tête ── -->
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \
+            <a routerLink="/training-activities">Activités de formation</a> \
+            Statistiques
+          </div>
+          <h1>Statistiques — Activités de formation</h1>
+        </div>
+
+        <div class="export-actions" *ngIf="!loading && !error">
+          <span class="export-label">Exporter :</span>
+          <button class="btn-export" type="button" (click)="exportExcel()" [disabled]="exporting">Excel</button>
+          <button class="btn-export btn-export-pdf" type="button" (click)="exportPdf()" [disabled]="exporting">
+            {{ exporting ? 'Génération...' : 'PDF' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Skeleton ── -->
+      <ng-container *ngIf="loading">
+        <div class="skeleton-bar" style="width:160px; margin-bottom:12px"></div>
+        <div class="kpi-grid">
+          <div class="skeleton-card" *ngFor="let _ of [1,2,3,4]">
+            <div class="sk sk-short"></div>
+            <div class="sk sk-tall"></div>
+          </div>
+        </div>
+        <div class="skeleton-bar" style="width:200px; margin-top:32px; margin-bottom:12px"></div>
+        <div class="skeleton-card" style="height:260px"></div>
+      </ng-container>
+
+      <!-- ── Erreur ── -->
+      <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+      <ng-container *ngIf="!loading && !error">
+
+        <!-- ════════════════════════════════════════════
+             KPI CARDS
+             ════════════════════════════════════════════ -->
+        <div class="section-title">Vue d'ensemble</div>
+        <div class="kpi-grid">
+
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Total formations</span>
+                <span class="kpi-value kpi-blue-val">{{ kpiTotal }}</span>
+                <span class="kpi-sub">activités enregistrées</span>
+              </div>
+              <div class="kpi-icon kpi-icon-blue">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Total participants</span>
+                <span class="kpi-value kpi-green-val">{{ kpiParticipants }}</span>
+                <span class="kpi-sub">participants cumulés</span>
+              </div>
+              <div class="kpi-icon kpi-icon-green">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Moy. participants</span>
+                <span class="kpi-value kpi-orange-val">{{ kpiAvg }}</span>
+                <span class="kpi-sub">par formation</span>
+              </div>
+              <div class="kpi-icon kpi-icon-orange">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 2a6 6 0 110 12A6 6 0 0110 4zm0 3a1 1 0 100 2 1 1 0 000-2zm-1 4a1 1 0 011-1h.5a.5.5 0 010 1H11v2.5a.5.5 0 01-1 0V9z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">En ligne</span>
+                <span class="kpi-value kpi-purple-val">{{ kpiOnlinePct }}</span>
+                <span class="kpi-sub">des formations</span>
+              </div>
+              <div class="kpi-icon kpi-icon-purple">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.321A1 1 0 0113 17H7a1 1 0 01-.704-1.71l.804-.321.123-.489H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Filtre global Actif / Archivé ── -->
+        <div class="filters-bar" style="margin-bottom: 16px;">
+          <div class="filter-ctrl">
+            <label>Statut</label>
+            <select [(ngModel)]="filterArchived">
+              <option value="active">Actifs</option>
+              <option value="archived">Archivés</option>
+              <option value="all">Les deux</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 1 — Vue par année
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 1 — Vue par année
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition annuelle</span>
+              <span class="badge-count">{{ t1Rows.length }} année(s)</span>
+            </div>
+            <button *ngIf="hasActiveF1" class="btn-reset" type="button" (click)="resetF1()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <!-- Filtres T1 -->
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>Secteur</label>
+              <select [(ngModel)]="f1.sector">
+                <option value="">Tous</option>
+                <option *ngFor="let s of availableSectors" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Thématique</label>
+              <select [(ngModel)]="f1.theme">
+                <option value="">Toutes</option>
+                <option *ngFor="let t of availableThemes" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f1.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f1.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f1.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f1.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T1 — barres formations + tendance moy. participants -->
+          <div class="chart-section t3-chart" *ngIf="t1Rows.length > 0">
+            <div class="chart-legend">
+              <span class="legend-swatch" style="background:#3b82f6;opacity:0.55"></span>
+              <span class="legend-lbl">Nb formations</span>
+              <span class="legend-swatch" style="background:#ea580c;border-radius:50%"></span>
+              <span class="legend-lbl">Tendance ratio</span>
+            </div>
+            <div class="t3-chart-inner">
+              <svg *ngIf="t1TrendPoints" class="trend-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline
+                  [attr.points]="t1TrendPoints"
+                  fill="none" stroke="#ea580c" stroke-width="2"
+                  vector-effect="non-scaling-stroke"
+                  stroke-linejoin="round" stroke-linecap="round"
+                  style="pointer-events:none"/>
+                <circle
+                  *ngFor="let c of t1TrendCircles"
+                  [attr.cx]="c.cx" [attr.cy]="c.cy"
+                  r="2.5" fill="#ea580c" stroke="#fff" stroke-width="1"
+                  vector-effect="non-scaling-stroke"
+                  style="pointer-events:all;cursor:default">
+                  <title>Ratio : {{ c.avg }}</title>
+                </circle>
+              </svg>
+              <div class="t3-bars">
+                <div class="t3-bar-col" *ngFor="let r of t1Rows">
+                  <div class="t3-bar"
+                       [style.height]="t1BarHF(r.count)"
+                       [title]="r.label + ' : ' + r.count + ' formations'"></div>
+                </div>
+              </div>
+              <div class="t3-x-axis">
+                <div class="t3-month" *ngFor="let r of t1Rows">{{ r.label }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table T1 -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Année</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Ratio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t1Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t1Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t1Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t1Total.count }}</td>
+                  <td class="col-num">{{ t1Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t1Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             FILTRES PARTAGÉS — Tableaux 2 & 3
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableaux 2 & 3 — Vue filtrée & mensuelle
+        </div>
+
+        <div class="shared-filters-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Filtres communs</span>
+              <span class="filter-hint">Ces filtres s'appliquent aux deux tableaux ci-dessous</span>
+            </div>
+            <button *ngIf="hasActiveF23" class="btn-reset" type="button" (click)="resetF23()">
+              Réinitialiser
+            </button>
+          </div>
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f23YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f23YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f23.pilotCenter">
+                <option value="">Tous</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f23.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Thématique</label>
+              <select [(ngModel)]="f23.theme">
+                <option value="">Toutes</option>
+                <option *ngFor="let t of availableThemes" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f23.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f23.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f23.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f23.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 2 — Vue filtrée par année
+             ════════════════════════════════════════════ -->
+        <div class="stats-card" style="margin-top:12px">
+          <div class="card-header">
+            <span class="card-title">Tableau 2 — Par année</span>
+            <span class="badge-count">{{ t2Rows.length }} ligne(s)</span>
+          </div>
+
+          <!-- Graphique T2 — barres horizontales -->
+          <div class="chart-section hbar-chart" *ngIf="t2Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t2Rows">
+              <div class="hbar-label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill" [style.width]="t2BarW(r.count)"></div>
+              </div>
+              <div class="hbar-stats">
+                <span class="hbar-count">{{ r.count }}</span>
+                <span class="hbar-pct">{{ t2Pct(r.count) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Année</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Ratio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t2Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t2Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t2Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t2Total.count }}</td>
+                  <td class="col-num">{{ t2Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t2Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 3 — Vue mensuelle (si année sélectionnée)
+             ════════════════════════════════════════════ -->
+        <div class="stats-card" style="margin-top:12px" *ngIf="f23Year; else noYearSelected">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Tableau 3 — Mois de {{ f23Year }}</span>
+              <span class="badge-count">{{ t3Rows.length }} mois</span>
+            </div>
+          </div>
+
+          <!-- Graphique T3 — barres mensuelles + tendance SVG -->
+          <div class="chart-section t3-chart" *ngIf="t3Rows.length > 0">
+            <div class="chart-legend">
+              <span class="legend-swatch" style="background:#3b82f6"></span>
+              <span class="legend-lbl">Nb formations</span>
+              <span class="legend-swatch" style="background:#ea580c;border-radius:50%"></span>
+              <span class="legend-lbl">Tendance ratio</span>
+            </div>
+            <div class="t3-chart-inner">
+              <svg *ngIf="t3TrendPoints" class="trend-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline
+                  [attr.points]="t3TrendPoints"
+                  fill="none" stroke="#ea580c" stroke-width="2"
+                  vector-effect="non-scaling-stroke"
+                  stroke-linejoin="round" stroke-linecap="round"
+                  style="pointer-events:none"/>
+                <circle
+                  *ngFor="let c of t3TrendCircles"
+                  [attr.cx]="c.cx" [attr.cy]="c.cy"
+                  r="2.5" fill="#ea580c" stroke="#fff" stroke-width="1"
+                  vector-effect="non-scaling-stroke"
+                  style="pointer-events:all;cursor:default">
+                  <title>Ratio : {{ c.avg }}</title>
+                </circle>
+              </svg>
+              <div class="t3-bars">
+                <div class="t3-bar-col" *ngFor="let r of t3Rows">
+                  <div class="t3-bar"
+                       [style.height]="t3BarH(r.count)"
+                       [title]="r.label + ' : ' + r.count + ' formations'"></div>
+                </div>
+              </div>
+              <div class="t3-x-axis">
+                <div class="t3-month" *ngFor="let r of t3Rows">{{ r.label.slice(0,3) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t3Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune activité pour {{ f23Year }} avec ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t3Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t3Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL {{ f23Year }}</td>
+                  <td class="col-num">{{ t3Total.count }}</td>
+                  <td class="col-num">{{ t3Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t3Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <ng-template #noYearSelected>
+          <div class="no-year-hint">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            Sélectionnez une <strong>Année</strong> dans les filtres ci-dessus pour afficher le Tableau 3 (détail mensuel).
+          </div>
+        </ng-template>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 4 — Par centre pilote
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 4 — Par centre pilote
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par centre</span>
+              <span class="badge-count">{{ t4Rows.length }} centre(s)</span>
+            </div>
+            <button *ngIf="hasActiveF4" class="btn-reset" type="button" (click)="resetF4()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f4YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f4YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Agrément centre</label>
+              <select [(ngModel)]="f4.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Thématique</label>
+              <select [(ngModel)]="f4.theme">
+                <option value="">Toutes</option>
+                <option *ngFor="let t of availableThemes" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f4.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f4.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f4.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f4.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T4 -->
+          <div class="chart-section hbar-chart" *ngIf="t4Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t4Rows">
+              <div class="hbar-label hbar-label-long" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill" [style.width]="t4BarW(r.count)"></div>
+              </div>
+              <div class="hbar-stats">
+                <span class="hbar-count">{{ r.count }}</span>
+                <span class="hbar-pct">{{ t4Pct(r.count) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Centre</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t4Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t4Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t4Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t4Total.count }}</td>
+                  <td class="col-num">{{ t4Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t4Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 5 — Par province
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 5 — Par province
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par province</span>
+              <span class="badge-count">{{ t5Rows.length }} province(s)</span>
+            </div>
+            <button *ngIf="hasActiveF5" class="btn-reset" type="button" (click)="resetF5()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f5YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f5YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f5.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f5.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f5.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f5.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f5.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T5 — donut provinces -->
+          <div class="sd-section" *ngIf="t5Rows.length > 0">
+            <div class="sd-wrap">
+              <div class="sd-ring" [style.background]="t5DonutGradient">
+                <div class="sd-hole">
+                  <span class="sd-total">{{ t5Total.count }}</span>
+                  <span class="sd-sub">formations</span>
+                </div>
+                <ng-container *ngFor="let lbl of t5DonutLabels">
+                  <span *ngIf="lbl.show" class="sd-seg-label"
+                        [style.left]="lbl.left" [style.top]="lbl.top">{{ lbl.pct }}</span>
+                </ng-container>
+              </div>
+            </div>
+            <ul class="sd-legend">
+              <li *ngFor="let item of t5DonutItems" class="sd-item">
+                <span class="sd-dot" [style.background]="item.color"></span>
+                <span class="sd-name" [title]="item.label">{{ item.label }}</span>
+                <span class="sd-count">{{ item.count }}</span>
+                <span class="sd-pct">{{ pctOf(item.count, t5Total.count) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Province</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t5Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t5Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t5Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t5Total.count }}</td>
+                  <td class="col-num">{{ t5Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t5Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 6 — Par centre de formation
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 6 — Par centre de formation
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par centre de formation</span>
+              <span class="badge-count">{{ t6Rows.length }} centre(s)</span>
+            </div>
+            <button *ngIf="hasActiveF6" class="btn-reset" type="button" (click)="resetF6()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f6YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f6YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f6.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f6.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f6.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f6.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f6.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f6.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T6 -->
+          <div class="chart-section hbar-chart" *ngIf="t6Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t6Rows">
+              <div class="hbar-label hbar-label-long" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-teal" [style.width]="t6BarW(r.count)"></div>
+              </div>
+              <div class="hbar-stats">
+                <span class="hbar-count">{{ r.count }}</span>
+                <span class="hbar-pct">{{ t6Pct(r.count) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Centre de formation</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t6Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t6Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t6Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t6Total.count }}</td>
+                  <td class="col-num">{{ t6Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t6Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 7 — Par type de phytolicence
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 7 — Par type de phytolicence
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par type de phytolicence</span>
+              <span class="badge-count">{{ t7Rows.length }} type(s)</span>
+            </div>
+            <button *ngIf="hasActiveF7" class="btn-reset" type="button" (click)="resetF7()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f7YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f7YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f7.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f7.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f7.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f7.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f7.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T7 — donut types phytolicence -->
+          <div class="sd-section" *ngIf="t7Rows.length > 0">
+            <div class="sd-wrap">
+              <div class="sd-ring" [style.background]="t7DonutGradient">
+                <div class="sd-hole">
+                  <span class="sd-total">{{ t7Total.count }}</span>
+                  <span class="sd-sub">formations</span>
+                </div>
+                <ng-container *ngFor="let lbl of t7DonutLabels">
+                  <span *ngIf="lbl.show" class="sd-seg-label"
+                        [style.left]="lbl.left" [style.top]="lbl.top">{{ lbl.pct }}</span>
+                </ng-container>
+              </div>
+            </div>
+            <ul class="sd-legend">
+              <li *ngFor="let item of t7DonutItems" class="sd-item">
+                <span class="sd-dot" [style.background]="item.color"></span>
+                <span class="sd-name" [title]="item.label">{{ item.label }}</span>
+                <span class="sd-count">{{ item.count }}</span>
+                <span class="sd-pct">{{ pctOf(item.count, t7Total.count) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Type de phytolicence</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t7Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t7Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t7Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t7Total.count }}</td>
+                  <td class="col-num">{{ t7Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t7Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 8 — Par type de formation
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 8 — Par type de formation
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition Initiale / Continue</span>
+              <span class="badge-count">{{ t8Rows.length }} type(s)</span>
+            </div>
+            <button *ngIf="hasActiveF8" class="btn-reset" type="button" (click)="resetF8()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f8YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f8YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f8.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f8.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f8.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f8.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f8.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T8 — donut type de formation -->
+          <div class="sd-section" *ngIf="t8Rows.length > 0">
+            <div class="sd-wrap">
+              <div class="sd-ring" [style.background]="t8DonutGradient">
+                <div class="sd-hole">
+                  <span class="sd-total">{{ t8Total.count }}</span>
+                  <span class="sd-sub">formations</span>
+                </div>
+                <ng-container *ngFor="let lbl of t8DonutLabels">
+                  <span *ngIf="lbl.show" class="sd-seg-label"
+                        [style.left]="lbl.left" [style.top]="lbl.top">{{ lbl.pct }}</span>
+                </ng-container>
+              </div>
+            </div>
+            <ul class="sd-legend">
+              <li *ngFor="let item of t8DonutItems" class="sd-item">
+                <span class="sd-dot" [style.background]="item.color"></span>
+                <span class="sd-name">{{ item.label }}</span>
+                <span class="sd-count">{{ item.count }}</span>
+                <span class="sd-pct">{{ pctOf(item.count, t8Total.count) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t8Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t8Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t8Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t8Total.count }}</td>
+                  <td class="col-num">{{ t8Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t8Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 9 — Par secteur
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 9 — Par secteur
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par secteur</span>
+              <span class="badge-count">{{ t9Rows.length }} secteur(s)</span>
+            </div>
+            <button *ngIf="hasActiveF9" class="btn-reset" type="button" (click)="resetF9()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f9YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f9YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f9.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f9.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f9.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f9.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f9.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f9.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T9 — barres horizontales secteurs -->
+          <div class="chart-section hbar-chart" *ngIf="t9Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t9Rows">
+              <div class="hbar-label hbar-label-long" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-green" [style.width]="t9BarW(r.count)"></div>
+              </div>
+              <div class="hbar-stats">
+                <span class="hbar-count">{{ r.count }}</span>
+                <span class="hbar-pct">{{ t9Pct(r.count) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Secteur</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t9Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t9Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t9Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t9Total.count }}</td>
+                  <td class="col-num">{{ t9Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t9Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 10 — Par mode de présence
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 10 — Par mode de présence
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par mode de présence</span>
+              <span class="badge-count">{{ t10Rows.length }} mode(s)</span>
+            </div>
+            <button *ngIf="hasActiveF10" class="btn-reset" type="button" (click)="resetF10()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f10YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f10YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f10.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f10.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f10.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f10.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T10 — donut mode de présence -->
+          <div class="sd-section" *ngIf="t10Rows.length > 0">
+            <div class="sd-wrap">
+              <div class="sd-ring" [style.background]="t10DonutGradient">
+                <div class="sd-hole">
+                  <span class="sd-total">{{ t10Total.count }}</span>
+                  <span class="sd-sub">formations</span>
+                </div>
+                <ng-container *ngFor="let lbl of t10DonutLabels">
+                  <span *ngIf="lbl.show" class="sd-seg-label"
+                        [style.left]="lbl.left" [style.top]="lbl.top">{{ lbl.pct }}</span>
+                </ng-container>
+              </div>
+            </div>
+            <ul class="sd-legend">
+              <li *ngFor="let item of t10DonutItems" class="sd-item">
+                <span class="sd-dot" [style.background]="item.color"></span>
+                <span class="sd-name" [title]="item.label">{{ item.label }}</span>
+                <span class="sd-count">{{ item.count }}</span>
+                <span class="sd-pct">{{ pctOf(item.count, t10Total.count) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Mode</th>
+                  <th class="col-num">Nb formations</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t10Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t10Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t10Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t10Total.count }}</td>
+                  <td class="col-num">{{ t10Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t10Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 11 — Ratio participants / activité par centre
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 11 — Ratio participants / activité par centre
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Ratio participants / activité par centre de formation</span>
+              <span class="badge-count">{{ t11Rows.length }} centre(s)</span>
+            </div>
+            <button *ngIf="hasActiveF11" class="btn-reset" type="button" (click)="resetF11()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f11YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f11YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f11.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f11.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f11.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f11.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f11.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f11.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T11 — barres horizontales par ratio -->
+          <div class="chart-section hbar-chart" *ngIf="t11Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t11Rows">
+              <div class="hbar-label hbar-label-long" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-purple" [style.width]="t11BarW(r.avg)"></div>
+              </div>
+              <div class="hbar-stats">
+                <span class="hbar-count">{{ r.avg }}</span>
+                <span class="hbar-pct" style="color:#6b7280">/ act.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Centre de formation</th>
+                  <th class="col-num">Nb activités</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Ratio (part. / act.)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t11Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t11Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t11Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL / MOY.</td>
+                  <td class="col-num">{{ t11Total.count }}</td>
+                  <td class="col-num">{{ t11Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t11Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 12 — CP / Sans CP
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 12 — CP / Sans CP
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition Avec CP / Sans CP (Phytodama)</span>
+              <span class="badge-count">{{ t12Total.count }} activité(s)</span>
+            </div>
+            <button *ngIf="hasActiveF12" class="btn-reset" type="button" (click)="resetF12()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f12YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f12YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f12.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f12.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f12.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f12.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f12.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique T12 — donut CP / Sans CP -->
+          <div class="sd-section" *ngIf="t12Rows.length > 0">
+            <div class="sd-wrap">
+              <div class="sd-ring" [style.background]="t12DonutGradient">
+                <div class="sd-hole">
+                  <span class="sd-total">{{ t12Total.count }}</span>
+                  <span class="sd-sub">activités</span>
+                </div>
+                <ng-container *ngFor="let lbl of t12DonutLabels">
+                  <span *ngIf="lbl.show" class="sd-seg-label"
+                        [style.left]="lbl.left" [style.top]="lbl.top">{{ lbl.pct }}</span>
+                </ng-container>
+              </div>
+            </div>
+            <ul class="sd-legend">
+              <li *ngFor="let item of t12DonutItems" class="sd-item">
+                <span class="sd-dot" [style.background]="item.color"></span>
+                <span class="sd-name" [title]="item.label">{{ item.label }}</span>
+                <span class="sd-count">{{ item.count }}</span>
+                <span class="sd-pct">{{ pctOf(item.count, t12Total.count) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th class="col-num">Nb activités</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Ratio (part. / act.)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t12Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t12Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ r.avg }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t12Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL / MOY.</td>
+                  <td class="col-num">{{ t12Total.count }}</td>
+                  <td class="col-num">{{ t12Total.participants || '—' }}</td>
+                  <td class="col-num col-avg">{{ t12Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 13 — Par thème / sous-thème
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 13 — Par thème / sous-thème
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Volume horaire par thème et sous-thème</span>
+              <span class="badge-count">{{ t13Rows.length }} ligne(s)</span>
+            </div>
+            <button *ngIf="hasActiveF13" class="btn-reset" type="button" (click)="resetF13()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f13YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f13YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Sous-thèmes</label>
+              <app-multiselect
+                [options]="availableSubThemes"
+                [(selected)]="f13SubThemes"
+                placeholder="Tous"
+              ></app-multiselect>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f13.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f13.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Secteur</label>
+              <select [(ngModel)]="f13.sector">
+                <option value="">Tous</option>
+                <option *ngFor="let s of availableSectors" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type phytolicence</label>
+              <select [(ngModel)]="f13.licenseType">
+                <option value="">Tous</option>
+                <option *ngFor="let l of availableLicenseTypes" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Province</label>
+              <select [(ngModel)]="f13.province">
+                <option value="">Toutes</option>
+                <option *ngFor="let p of availableProvinces" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Mode</label>
+              <select [(ngModel)]="f13.mode">
+                <option value="">Tous</option>
+                <option value="onsite">Présentiel</option>
+                <option value="online">En ligne</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type</label>
+              <select [(ngModel)]="f13.type">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Donut T13 — volume horaire par thème -->
+          <div class="sd-section" *ngIf="t13ByTheme.length > 0">
+            <div class="sd-wrap">
+              <div class="sd-ring" [style.background]="t13DonutGradient">
+                <div class="sd-hole">
+                  <span class="sd-total">{{ t13Total.totalHours }}</span>
+                  <span class="sd-sub">heures</span>
+                </div>
+                <ng-container *ngFor="let lbl of t13DonutLabels">
+                  <span *ngIf="lbl.show" class="sd-seg-label"
+                        [style.left]="lbl.left" [style.top]="lbl.top">{{ lbl.pct }}</span>
+                </ng-container>
+              </div>
+            </div>
+            <ul class="sd-legend">
+              <li *ngFor="let item of t13DonutItems" class="sd-item">
+                <span class="sd-dot" [style.background]="item.color"></span>
+                <span class="sd-name">{{ item.label }}</span>
+                <span class="sd-count">{{ item.count }} h</span>
+                <span class="sd-pct">{{ pctOf(item.count, t13Total.totalHours) }}%</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Graphique T13 — barres horizontales par thème / sous-thème -->
+          <div class="chart-section t13-chart" *ngIf="t13ChartRows.length > 0">
+            <div class="t13-chart-header">
+              <div class="chart-legend">
+                <span class="legend-swatch" style="background:#3b82f6"></span>
+                <span class="legend-lbl">Volume horaire (h)</span>
+                <span class="legend-swatch" style="background:#10b981;margin-left:8px"></span>
+                <span class="legend-lbl">Nb activités</span>
+              </div>
+              <div class="t13-toggle">
+                <button class="t13-toggle-btn" [class.active]="t13ChartMode === 'theme'"
+                        type="button" (click)="t13ChartMode = 'theme'">Par thème</button>
+                <button class="t13-toggle-btn" [class.active]="t13ChartMode === 'subtheme'"
+                        type="button" (click)="t13ChartMode = 'subtheme'">Par sous-thème</button>
+              </div>
+            </div>
+            <div class="t13-rows">
+              <div class="t13-theme-row" *ngFor="let r of t13ChartRows">
+                <div class="t13-theme-label" [title]="t13ChartMode === 'subtheme' ? r.subTheme : r.theme">
+                  <span class="t13-label-main">{{ t13ChartMode === 'subtheme' ? r.subTheme : r.theme }}</span>
+                  <span class="t13-label-sub" *ngIf="t13ChartMode === 'subtheme'">{{ r.theme }}</span>
+                </div>
+                <div class="t13-bars-col">
+                  <div class="t13-bar-line">
+                    <div class="hbar-track t13-track">
+                      <div class="hbar-fill" [style.width]="t13HoursBarW(r.totalHours)"></div>
+                    </div>
+                    <span class="t13-val">{{ r.totalHours > 0 ? r.totalHours + ' h' : '—' }}</span>
+                    <span class="t13-pct">{{ t13HoursPct(r.totalHours) }}</span>
+                  </div>
+                  <div class="t13-bar-line">
+                    <div class="hbar-track t13-track">
+                      <div class="hbar-fill t13-fill-green" [style.width]="t13CountBarW(r.count)"></div>
+                    </div>
+                    <span class="t13-val t13-val-green">{{ r.count }} act.</span>
+                    <span class="t13-pct">{{ r.participants || 0 }} part.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Thème</th>
+                  <th>Sous-thème</th>
+                  <th class="col-num">Nb act. formation</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Volume horaire (h)</th>
+                  <th class="col-num">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t13Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t13Rows">
+                  <td class="col-label">{{ r.theme }}</td>
+                  <td class="col-label">{{ r.subTheme }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.participants || '—' }}</td>
+                  <td class="col-num">{{ r.totalHours > 0 ? r.totalHours : '—' }}</td>
+                  <td class="col-num col-avg">{{ r.totalHours > 0 ? t13HoursPct(r.totalHours) : '—' }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t13Rows.length > 0">
+                <tr>
+                  <td class="foot-label" colspan="2">TOTAL</td>
+                  <td class="col-num">{{ t13Total.count }}</td>
+                  <td class="col-num">{{ t13Total.participants || '—' }}</td>
+                  <td class="col-num">{{ t13Total.totalHours > 0 ? t13Total.totalHours : '—' }}</td>
+                  <td class="col-num">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 14 — Distribution horaire
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 14 — Distribution horaire
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par durée d'activité</span>
+              <span class="badge-count">{{ t14WithDurationCount }} activité(s) avec durée</span>
+            </div>
+            <button *ngIf="hasActiveF14" class="btn-reset" type="button" (click)="resetF14()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f14YearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f14YearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre pilote</label>
+              <select [(ngModel)]="f14.pilotCenter">
+                <option value="">Tous</option>
+                <option value="__none__">—</option>
+                <option *ngFor="let p of availablePilotCenters" [value]="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f14.centerAccreditation">
+                <option value="">Tous</option>
+                <option *ngFor="let c of availableCenterAccreditations" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Thème</label>
+              <select [(ngModel)]="f14.theme">
+                <option value="">Tous</option>
+                <option *ngFor="let t of availableThemes" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- KPI mini-cards -->
+          <div class="hour-kpis">
+            <div class="hour-kpi">
+              <span class="hour-kpi-label">Durée moyenne</span>
+              <span class="hour-kpi-value">{{ t14AvgHours }}h</span>
+            </div>
+            <div class="hour-kpi">
+              <span class="hour-kpi-label">Minimum</span>
+              <span class="hour-kpi-value">{{ t14MinHours !== null ? t14MinHours + 'h' : '—' }}</span>
+            </div>
+            <div class="hour-kpi">
+              <span class="hour-kpi-label">Maximum</span>
+              <span class="hour-kpi-value">{{ t14MaxHours !== null ? t14MaxHours + 'h' : '—' }}</span>
+            </div>
+            <div class="hour-kpi">
+              <span class="hour-kpi-label">Total heures</span>
+              <span class="hour-kpi-value">{{ t14TotalHours }}h</span>
+            </div>
+            <div class="hour-kpi hour-kpi-warn" *ngIf="t14MissingCount > 0">
+              <span class="hour-kpi-label">Sans durée</span>
+              <span class="hour-kpi-value">{{ t14MissingCount }}</span>
+            </div>
+          </div>
+
+          <!-- Tableau de distribution -->
+          <div class="table-wrap" *ngIf="t14WithDurationCount > 0">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Tranche horaire</th>
+                  <th class="col-num">Activités</th>
+                  <th class="col-num">Part</th>
+                  <th style="width:40%">Répartition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of t14BucketRows">
+                  <td class="col-label">{{ r.bucket }}</td>
+                  <td class="col-num col-total">{{ r.count }}</td>
+                  <td class="col-num col-zero">{{ r.pct }}</td>
+                  <td>
+                    <div class="hbar-track" *ngIf="r.count > 0">
+                      <div class="hbar-fill hbar-fill-teal" [style.width]="t14BarW(r.count)"></div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="t14WithDurationCount === 0" class="empty-row" style="padding:20px;text-align:center">
+            Aucune activité avec une durée renseignée pour ces filtres.
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 15 — Évolution mensuelle
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 15 — Évolution mensuelle
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Activités par mois — {{ t15Year }}</span>
+              <span class="badge-count">{{ t15Total.count }} activité(s)</span>
+            </div>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>Année</label>
+              <select [(ngModel)]="t15Year">
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique vertical -->
+          <div class="vbar-chart" *ngIf="t15Total.count > 0">
+            <div class="vbar-item" *ngFor="let r of t15Rows; let i = index">
+              <span class="vbar-count">{{ r.count > 0 ? r.count : '' }}</span>
+              <div class="vbar-bar" [style.height]="t15BarH(r.count)"
+                   [style.background]="COLORS[i % COLORS.length]"
+                   [title]="r.label + ' : ' + r.count + ' activité(s), ' + r.participants + ' participant(s)'">
+              </div>
+            </div>
+          </div>
+          <div class="vbar-labels" *ngIf="t15Total.count > 0">
+            <span *ngFor="let r of t15Rows" class="vbar-lbl">{{ r.label.substring(0, 3) }}</span>
+          </div>
+
+          <!-- Tableau -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th class="col-num">Activités</th>
+                  <th class="col-num">Participants</th>
+                  <th class="col-num">Moy. participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of t15Rows" [class.row-empty]="r.count === 0">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num" [class.col-zero]="r.count === 0">{{ r.count > 0 ? r.count : '—' }}</td>
+                  <td class="col-num" [class.col-zero]="r.participants === 0">{{ r.participants > 0 ? r.participants : '—' }}</td>
+                  <td class="col-num" [class.col-zero]="r.count === 0">{{ r.count > 0 ? r.avg : '—' }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t15Total.count > 0">
+                <tr class="total-row">
+                  <td>TOTAL</td>
+                  <td class="col-num">{{ t15Total.count }}</td>
+                  <td class="col-num">{{ t15Total.participants }}</td>
+                  <td class="col-num">{{ t15Total.avg }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+      </ng-container>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+@import '../../../../shared/styles/create-page.css';
+
+/* ── Surcharges spécifiques ── */
+
+/* Formulaire plus large que la page create */
+.form { max-width: 980px; }
+
+/* Inputs compacts (hauteur fixe 36px) */
+.row input,
+.row select {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.row textarea {
+  height: auto;
+  min-height: 90px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+/* Grille 2 col à 880px (plus large que la page create) */
+@media (min-width: 880px) {
+  .grid-2 { grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+}

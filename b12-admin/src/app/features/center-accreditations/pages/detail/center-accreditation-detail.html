@@ -1,0 +1,348 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/center-accreditations">Agréments centres</a><span class="crumb-sep">›</span><span>Détail</span>
+          </div>
+
+          <div class="title-row">
+            <h1>Modifier un agrément centre</h1>
+
+            <span class="pill" [ngClass]="currentArchived ? 'pill-archived' : 'pill-active'">
+              {{ currentArchived ? 'Archivé' : 'Actif' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/center-accreditations">Retour</a>
+
+          <button
+            *hasRole="['ADMIN','USER']"
+            class="btn-renew"
+            type="button"
+            (click)="renew()"
+            [disabled]="loading"
+            title="Prolonger ou renouveler cet agrément"
+          >
+            Renouveler
+          </button>
+
+          <button
+            *hasRole="['ADMIN','USER']"
+            class="btn-primary"
+            type="button"
+            (click)="save()"
+            [disabled]="loading"
+          >
+            {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div *ngIf="loading && !createdAt" class="muted">Chargement…</div>
+          <div *ngIf="success" class="success">{{ success }}</div>
+          <div *ngIf="error"   class="error">{{ error }}</div>
+
+          <!-- =============================================
+               CENTRE DE FORMATION (lecture seule)
+          ============================================== -->
+          <div class="section-head first-section">
+            <h2>Centre de formation</h2>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Nom du centre</label>
+              <div class="readonly-value">{{ tcName }}</div>
+            </div>
+            <div class="row">
+              <label>Numéro d'entreprise</label>
+              <div class="readonly-value">{{ tcCompanyNumber }}</div>
+            </div>
+          </div>
+
+          <!-- =============================================
+               AGRÉMENT
+          ============================================== -->
+          <div class="section-head">
+            <h2>Agrément</h2>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Numéro d'agrément</label>
+              <input type="text" formControlName="accreditationNumber" maxlength="60" placeholder="Ex: 21" />
+            </div>
+
+            <div class="row">
+              <label>Statut de la demande</label>
+              <select formControlName="requestStatus">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let opt of statusOptions" [value]="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="row">
+              <label>Date de réception</label>
+              <input type="date" formControlName="receivedDate" />
+            </div>
+
+            <div class="row">
+              <!-- spacer -->
+            </div>
+
+            <div class="row">
+              <label>Début de l'agrément</label>
+              <input type="date" formControlName="startDate" />
+            </div>
+
+            <div class="row">
+              <label>Fin de l'agrément</label>
+              <input type="date" formControlName="endDate" />
+              <div class="field-error" *ngIf="form.hasError('endBeforeStart')">
+                La date de fin ne peut pas être antérieure à la date de début.
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2 grid-checkboxes">
+            <div class="row">
+              <label class="checkbox-row">
+                <input type="checkbox" formControlName="initial" />
+                <span>Agrément initial</span>
+              </label>
+            </div>
+
+            <div class="row">
+              <label class="checkbox-row">
+                <input type="checkbox" formControlName="continuous" />
+                <span>Agrément continu</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- =============================================
+               ADRESSES DE SITES DE FORMATION
+          ============================================== -->
+          <div class="section-head">
+            <div class="section-head-row">
+              <div>
+                <h2>Adresses de sites de formation</h2>
+                <p class="muted">Sites physiques où se déroulent les formations.</p>
+              </div>
+              <button
+                *hasRole="['ADMIN','USER']"
+                type="button"
+                class="btn-secondary btn-sm"
+                (click)="addAddress()"
+              >
+                + Ajouter une adresse
+              </button>
+            </div>
+          </div>
+
+          <p class="empty-hint" *ngIf="addresses.length === 0">
+            Aucune adresse ajoutée. Cliquez sur « Ajouter une adresse » pour en créer une.
+          </p>
+
+          <div class="batch-list" formArrayName="trainingSiteAddresses">
+            <div
+              class="batch-item"
+              *ngFor="let addr of addresses.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <div class="item-head">
+                <span class="item-number">Adresse #{{ i + 1 }}</span>
+                <button
+                  *hasRole="['ADMIN','USER']"
+                  type="button"
+                  class="icon-danger"
+                  (click)="removeAddress(i)"
+                  title="Supprimer cette adresse"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Rue</label>
+                  <input type="text" formControlName="street" maxlength="180" placeholder="Ex: Rue de Namur" />
+                </div>
+                <div class="row">
+                  <label>Numéro</label>
+                  <input type="text" formControlName="number" maxlength="30" placeholder="Ex: 12A" />
+                </div>
+                <div class="row">
+                  <label>Code postal</label>
+                  <input type="text" formControlName="postalCode" maxlength="20" placeholder="Ex: 5000" (input)="onAddressPostalCodeInput(i)" />
+                </div>
+                <div class="row">
+                  <label>Ville</label>
+                  <input type="text" formControlName="city" maxlength="120" placeholder="Ex: Namur" />
+                </div>
+                <div class="row">
+                  <label>Province</label>
+                  <input type="text" formControlName="province" maxlength="120" placeholder="Ex: Namur (NA)" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- =============================================
+               PERSONNES DE CONTACT
+          ============================================== -->
+          <div class="section-head">
+            <div class="section-head-row">
+              <div>
+                <h2>Personnes de contact</h2>
+                <p class="muted">Contacts liés à cet agrément.</p>
+              </div>
+              <button
+                *hasRole="['ADMIN','USER']"
+                type="button"
+                class="btn-secondary btn-sm"
+                (click)="addContact()"
+              >
+                + Ajouter un contact
+              </button>
+            </div>
+          </div>
+
+          <p class="empty-hint" *ngIf="contacts.length === 0">
+            Aucun contact ajouté. Cliquez sur « Ajouter un contact » pour en créer un.
+          </p>
+
+          <div class="batch-list" formArrayName="contactPeople">
+            <div
+              class="batch-item"
+              *ngFor="let contact of contacts.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <div class="item-head">
+                <span class="item-number">Contact #{{ i + 1 }}</span>
+                <button
+                  *hasRole="['ADMIN','USER']"
+                  type="button"
+                  class="icon-danger"
+                  (click)="removeContact(i)"
+                  title="Supprimer ce contact"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Prénom</label>
+                  <input type="text" formControlName="firstName" maxlength="120" placeholder="Ex: Jean-Nicolas" />
+                </div>
+                <div class="row">
+                  <label>Nom</label>
+                  <input type="text" formControlName="lastName" maxlength="120" placeholder="Ex: Arnould" />
+                </div>
+                <div class="row">
+                  <label>Email</label>
+                  <input type="email" formControlName="email" maxlength="180" placeholder="Ex: jn.arnould@exemple.be"
+                    (blur)="normalizeEmailBlur($event, contact.get('email'))" />
+                  <div class="field-error" *ngIf="contact.get('email')?.touched && contact.get('email')?.invalid">
+                    Adresse e-mail invalide.
+                  </div>
+                </div>
+                <div class="row">
+                  <label>Téléphone</label>
+                  <input type="text" formControlName="phone" maxlength="40" placeholder="Ex: +32 81 00 00 00"
+                    (blur)="formatPhoneBlur($event, contact.get('phone'))" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- =============================================
+               MÉTADONNÉES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Historique</h2>
+          </div>
+
+          <div class="grid-2 meta-grid">
+            <div class="meta-row">
+              <span class="meta-label">Créé le</span>
+              <span class="meta-value">{{ formatDate(createdAt) }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Créé par</span>
+              <span class="meta-value">{{ createdBy || '-' }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Modifié le</span>
+              <span class="meta-value">{{ formatDate(updatedAt) }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Modifié par</span>
+              <span class="meta-value">{{ updatedBy || '-' }}</span>
+            </div>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button
+              *hasRole="['ADMIN','USER']"
+              class="btn-primary"
+              type="button"
+              (click)="save()"
+              [disabled]="loading"
+            >
+              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+
+            <button
+              *hasRole="['ADMIN','USER']"
+              class="btn-secondary"
+              type="button"
+              (click)="renew()"
+              [disabled]="loading"
+              title="Prolonger ou renouveler cet agrément"
+            >
+              Renouveler
+            </button>
+
+            <button
+              *hasRole="['ADMIN','USER']"
+              class="btn-secondary"
+              type="button"
+              (click)="toggleArchive()"
+              [disabled]="loading"
+            >
+              {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+            </button>
+
+            <button
+              *hasRole="['ADMIN','USER']"
+              class="btn-danger"
+              type="button"
+              (click)="delete()"
+              [disabled]="loading"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+

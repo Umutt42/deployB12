@@ -1,0 +1,835 @@
+/* ===================================================
+   TRAINING-ACTIVITY STATS — layout
+=================================================== */
+.app-shell   { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.content-shell { display: flex; flex: 1; overflow: hidden; }
+.main        { flex: 1; overflow-y: auto; padding: 28px 32px 48px; background: var(--bg-app); }
+
+/* ===================================================
+   Page head
+=================================================== */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.breadcrumb a { color: var(--text-muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--primary); }
+.page-head h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--text-main); }
+
+/* ===================================================
+   Export buttons
+=================================================== */
+.export-actions { display: flex; align-items: center; gap: 8px; }
+.export-label   { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-export:hover:not(:disabled) { background: #eef2f7; border-color: var(--primary); }
+.btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-export-pdf {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.btn-export-pdf:hover:not(:disabled) {
+  background: var(--primary-dark, #2563eb);
+  border-color: var(--primary-dark, #2563eb);
+}
+
+/* ===================================================
+   Section titles
+=================================================== */
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+/* ===================================================
+   Skeleton
+=================================================== */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+.skeleton-bar {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.4s ease infinite;
+}
+
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: skeleton-pulse 1.4s ease infinite;
+}
+
+.sk { background: #e2e8f0; border-radius: 4px; }
+.sk-short { height: 11px; width: 55%; }
+.sk-tall  { height: 34px; width: 38%; }
+
+.error-msg { padding: 32px; text-align: center; font-size: 14px; color: #dc2626; }
+
+/* ===================================================
+   KPI Cards
+=================================================== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  border-top: 3px solid transparent;
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-blue   { border-top-color: #0e7a75; }
+.kpi-green  { border-top-color: #4d9c18; }
+.kpi-orange { border-top-color: #b7c90d; }
+.kpi-purple { border-top-color: #12a19a; }
+
+.kpi-card-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.kpi-texts    { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value { font-size: 36px; font-weight: 800; line-height: 1.1; }
+.kpi-blue-val   { color: #0e7a75; }
+.kpi-green-val  { color: #4d9c18; }
+.kpi-orange-val { color: #b7c90d; }
+.kpi-purple-val { color: #12a19a; }
+
+.kpi-sub { font-size: 12px; color: var(--text-muted); }
+
+.kpi-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.kpi-icon svg { width: 22px; height: 22px; }
+.kpi-icon-blue   { background: #cce8e7; color: #0e7a75; }
+.kpi-icon-green  { background: #d5efc5; color: #4d9c18; }
+.kpi-icon-orange { background: #f0f5c5; color: #6e7800; }
+.kpi-icon-purple { background: #cce8e7; color: #12a19a; }
+
+/* ===================================================
+   Stats cards (contenant filtres + table)
+=================================================== */
+.stats-card,
+.shared-filters-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.shared-filters-card {
+  border-left: 3px solid var(--primary);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.badge-count {
+  display: inline-block;
+  background: #e0f2f1;
+  color: #0e7a75;
+  border: 1px solid #99d5d3;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.filter-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ===================================================
+   Barre de filtres
+=================================================== */
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.filter-ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 130px;
+  flex: 1;
+}
+
+.filter-ctrl-year {
+  min-width: 90px;
+  max-width: 110px;
+  flex: 0 0 auto;
+}
+
+.filter-ctrl label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-ctrl select {
+  padding: 5px 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text-main);
+  background: var(--bg-app);
+  cursor: pointer;
+}
+
+.filter-ctrl select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn-reset {
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-reset:hover { background: #fee2e2; }
+
+/* ===================================================
+   Tableau de statistiques
+=================================================== */
+.table-wrap { overflow-x: auto; }
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stats-table thead tr {
+  background: #f8fafc;
+  border-bottom: 2px solid var(--border-soft);
+}
+
+.stats-table th {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-align: left;
+}
+.stats-table th.col-num { text-align: right; }
+
+.stats-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.stats-table tbody tr:last-child td { border-bottom: none; }
+.stats-table tbody tr:hover td { background: #f8fafc; }
+
+.stats-table tfoot tr {
+  background: #e0f2f1;
+  border-top: 2px solid #99d5d3;
+}
+.stats-table tfoot td {
+  border-bottom: none;
+  font-weight: 700;
+  padding: 10px 16px;
+  color: #065f5a;
+}
+
+.col-label { font-weight: 600; }
+.col-num   { text-align: right; font-variant-numeric: tabular-nums; }
+.col-avg   { color: var(--text-muted); font-weight: 400; }
+.foot-label { color: #065f5a; }
+
+.empty-row {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 28px 16px !important;
+  font-size: 13px;
+}
+
+/* ===================================================
+   Hint "sélectionner une année"
+=================================================== */
+.no-year-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-card);
+  font-size: 13px;
+  color: #0369a1;
+  margin-top: 12px;
+}
+
+.no-year-hint svg { flex-shrink: 0; color: #0284c7; }
+
+/* ===================================================
+   CHARTS — communs
+=================================================== */
+.chart-section {
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-lbl { font-weight: 500; }
+
+/* ===================================================
+   T2 — Barres horizontales
+=================================================== */
+.hbar-chart { padding: 14px 16px; }
+
+.hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.hbar-row:last-child { margin-bottom: 0; }
+
+.hbar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  width: 56px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.hbar-track {
+  flex: 1;
+  height: 18px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hbar-fill {
+  height: 100%;
+  background: #12a19a;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.hbar-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.hbar-count { font-weight: 700; color: var(--text-main); width: 32px; text-align: right; flex-shrink: 0; }
+.hbar-pct   { color: var(--text-muted); width: 48px; text-align: right; flex-shrink: 0; }
+
+.hbar-label-long {
+  width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hbar-fill-purple { background: #b7c90d; }
+.hbar-fill-teal   { background: #0e7a75; }
+.hbar-fill-orange { background: #12a19a; }
+.hbar-fill-green  { background: #4d9c18; }
+
+/* ===================================================
+   T13 — Graphique thème / sous-thème
+=================================================== */
+.t13-chart {
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.t13-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.t13-toggle {
+  display: flex;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.t13-toggle-btn {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: var(--bg-app);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.t13-toggle-btn:not(:last-child) {
+  border-right: 1px solid var(--border-soft);
+}
+.t13-toggle-btn.active {
+  background: #0e7a75;
+  color: #fff;
+}
+.t13-toggle-btn:not(.active):hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+}
+
+.t13-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.t13-theme-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.t13-theme-label {
+  width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 2px;
+}
+
+.t13-label-main {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.t13-label-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.t13-bars-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.t13-bar-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.t13-track {
+  flex: 1;
+  height: 14px;
+}
+
+.t13-fill-green { background: #4d9c18; }
+
+.t13-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  min-width: 56px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.t13-val-green { color: #4d9c18; }
+
+.t13-pct {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+/* ===================================================
+   T3 — Barres mensuelles + tendance SVG
+=================================================== */
+.t3-chart-inner {
+  position: relative;
+  height: 160px;
+}
+
+.trend-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 20px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.t3-bars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  z-index: 1;
+}
+
+.t3-bar-col {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+}
+
+.t3-bar {
+  width: 68%;
+  background: rgba(18, 161, 154, 0.5);
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+}
+
+.t3-x-axis {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 3px;
+  height: 20px;
+}
+
+.t3-month {
+  flex: 1;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 20px;
+  overflow: hidden;
+}
+
+/* ===================================================
+   DONUT CHART (T5 provinces, T7 types phytolicence)
+   Préfixe sd- (stats-donut) pour isolation totale
+=================================================== */
+.sd-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.sd-wrap {
+  flex-shrink: 0;
+}
+
+.sd-ring {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sd-hole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.sd-total {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.sd-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sd-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.sd-item {
+  display: grid;
+  grid-template-columns: 10px 1fr 32px 46px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.sd-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sd-name {
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.sd-count {
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sd-pct {
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.sd-seg-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+
+/* ===================================================
+   Tableau 14 — Distribution horaire
+=================================================== */
+.hour-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.hour-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 18px;
+  min-width: 110px;
+}
+
+.hour-kpi-warn {
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+.hour-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.hour-kpi-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.hour-kpi-warn .hour-kpi-value { color: #dc2626; }
+
+/* ===================================================
+   Tableau 15 — Graphique vertical mensuel
+=================================================== */
+.vbar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 150px;
+  padding-top: 4px;
+  border-bottom: 2px solid #e2e8f0;
+  margin-top: 4px;
+}
+
+.vbar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+
+.vbar-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-main);
+  min-height: 14px;
+  line-height: 1;
+}
+
+.vbar-bar {
+  width: 100%;
+  max-width: 36px;
+  background: #12a19a;
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height 0.3s ease;
+}
+
+.vbar-labels {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 20px;
+}
+
+.vbar-lbl {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.row-empty td { color: #94a3b8; }

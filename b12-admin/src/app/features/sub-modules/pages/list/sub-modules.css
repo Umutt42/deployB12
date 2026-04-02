@@ -1,0 +1,72 @@
+@import '../../../../shared/styles/list-page.css';
+
+.head-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--primary);
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-stats:hover { background: #eef2f7; border-color: var(--primary); }
+
+.year-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.year-tab { height: 30px; padding: 0 14px; border-radius: 999px; border: 1px solid #cfd9e2; background: #fff; color: #1b6ea8; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.year-tab:hover { background: #eef6ff; border-color: #9ec5fe; }
+.year-tab.active { background: #4a7d96; color: #fff; border-color: #3c6a80; }
+
+.data-table { min-width: 2400px; }
+
+.col-centeraccreditation { width: 200px; }
+.col-title               { width: 260px; }
+.col-licensetypes        { width: 190px; }
+.col-themes              { width: 220px; }
+.col-durationhours       { width: 80px; }
+.col-price               { width: 90px; }
+.col-trainers            { width: 220px; }
+.col-bool                { width: 90px; }
+.col-receiveddate        { width: 140px; }
+.col-status              { width: 130px; }
+.col-accreditnumber      { width: 120px; }
+.col-trainingpoints      { width: 80px; }
+.col-startdate           { width: 140px; }
+.col-enddate             { width: 140px; }
+.col-comment             { width: 260px; }
+.col-comment .comment-cell { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; color: #4a5568; font-size: 12px; white-space: normal; }
+.col-partners            { width: 220px; }
+.col-sectors             { width: 180px; }
+.col-pilotcenters        { width: 180px; }
+.col-updatedby           { width: 140px; }
+.col-created             { width: 180px; }
+.col-updated             { width: 180px; }
+
+.date-ok            { color: #2e7d32; font-weight: 700; }
+.date-expiring-soon { color: #ff8c00; font-weight: 700; }
+.date-expired       { color: #c62828; font-weight: 700; }
+
+.status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid transparent; }
+.status-accepted { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+.status-refused  { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
+.status-received { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+.status-pending  { background: #fff8e1; color: #e65100; border-color: #ffecb3; }
+
+.theme-names    { font-weight: 600; color: #1f2a33; }
+.subtheme-names { font-size: 12px; color: #6c7a86; }
+
+.table-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+.pagination { display: flex; align-items: center; gap: 4px; }
+.page-btn { min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid #cfd9e2; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; color: #2a3b47; }
+.page-btn:hover:not(:disabled) { background: #f3f7fb; }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+.page-btn.active { background: #4a7d96; color: #fff; border-color: #3c6a80; }
+.page-ellipsis { padding: 0 4px; color: #6c7a86; }

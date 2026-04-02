@@ -1,0 +1,31 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ===================================================
+   TRAINING-CENTERS — spécifique
+=================================================== */
+
+.data-table { min-width: 1630px; }
+
+.col-name         { width: 200px; }
+.col-companynumber { width: 140px; }
+.col-hqcity       { width: 220px; }
+.col-sectors      { width: 200px; }
+.col-pilotcenters { width: 200px; }
+.col-archived     { width: 90px; }
+.col-created      { width: 160px; }
+.col-updated      { width: 160px; }
+.col-updatedby    { width: 160px; }
+
+/* Siège social : contenu multi-ligne */
+.hq { white-space: normal; }
+.hq-main { font-weight: 700; color: #1f2a33; line-height: 1.2; }
+.hq-sub  { margin-top: 2px; font-size: 12px; line-height: 1.2; }
+
+/* Colonnes multi-valeurs */
+.col-sectors,
+.col-pilotcenters {
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: top;
+  line-height: 1.5;
+}

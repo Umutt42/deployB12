@@ -1,0 +1,299 @@
+<div class="app-shell">
+    <app-topbar></app-topbar>
+
+    <div class="content-shell">
+      <app-sidebar></app-sidebar>
+
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="breadcrumb">
+              <a class="crumb-link" routerLink="/training-centers">Centres de formation</a><span class="crumb-sep">›</span><span>Ajouter</span>
+            </div>
+            <h1>Ajouter un ou plusieurs centres de formation</h1>
+          </div>
+          <a class="btn-secondary" routerLink="/training-centers">Retour</a>
+        </div>
+
+        <div class="table-card">
+          <div class="form" [formGroup]="form">
+
+            <div class="batch-head">
+              <div class="batch-title">
+                <strong>{{ pendingCount }}</strong> centre(s) en attente
+                <span *ngIf="successCount > 0" class="pill pill-success">
+                  {{ successCount }} créé(s) avec succès
+                </span>
+              </div>
+              <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+                + Ajouter un centre
+              </button>
+            </div>
+
+            <!-- ERREUR GLOBALE -->
+            <div *ngIf="error" class="error">{{ error }}</div>
+
+            <div class="batch-list" formArrayName="items">
+              <div
+                class="batch-item"
+                *ngFor="let g of items.controls; let i = index"
+                [formGroupName]="i"
+                [hidden]="rowStates[i]?.status === 'success'"
+              >
+                <!-- HEADER LIGNE -->
+                <div class="item-head">
+                  <div class="item-left">
+                    <div class="item-number">Centre #{{ i + 1 }}</div>
+                    <span
+                      class="pill"
+                      [ngClass]="{
+                        'pill-saving':  rowStates[i]?.status === 'saving',
+                        'pill-success': rowStates[i]?.status === 'success',
+                        'pill-error':   rowStates[i]?.status === 'error'
+                      }"
+                    >
+                      {{ rowStates[i]?.status === 'saving'  ? 'Enregistrement...'
+                        : rowStates[i]?.status === 'success' ? 'OK'
+                        : rowStates[i]?.status === 'error'   ? 'Erreur'
+                        : 'Prêt' }}
+                    </span>
+                  </div>
+                  <button
+                    class="icon-danger"
+                    type="button"
+                    (click)="removeItem(i)"
+                    [disabled]="items.length <= 1 || loading"
+                    title="Supprimer"
+                  >🗑</button>
+                </div>
+
+                <!-- =========================
+                     INFOS GÉNÉRALES
+                ========================== -->
+                <div class="section-head">
+                  <h2>Informations</h2>
+                  <p class="muted">Les champs marqués * sont obligatoires.</p>
+                </div>
+
+                <div class="grid-2">
+                  <div class="row">
+                    <label>Nom *</label>
+                    <div class="autocomplete">
+                      <input
+                        type="text"
+                        formControlName="name"
+                        maxlength="180"
+                        autocomplete="off"
+                        (input)="onNameInput(i)"
+                        (focus)="onNameFocus(i)"
+                        (blur)="onNameBlur()"
+                      />
+                      <ul class="suggestions" *ngIf="showNameSuggestions && activeRowIndex === i && nameSuggestions.length > 0">
+                        <li *ngFor="let s of nameSuggestions">
+                          <button type="button" (click)="pickName(s)">{{ s }}</button>
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="field-error" *ngIf="g.get('name')?.touched && g.get('name')?.invalid">
+                      Le nom est obligatoire.
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <label>Numéro d'entreprise *</label>
+                    <div class="autocomplete">
+                      <input
+                        type="text"
+                        formControlName="companyNumber"
+                        maxlength="14"
+                        placeholder="Ex: BE0123.456.789"
+                        autocomplete="off"
+                        (input)="onCompanyNumberInput(i)"
+                        (focus)="onCompanyNumberFocus(i)"
+                        (blur)="onCompanyNumberBlur()"
+                      />
+                      <ul class="suggestions" *ngIf="showCompanyNumberSuggestions && activeRowIndex === i && companyNumberSuggestions.length > 0">
+                        <li *ngFor="let s of companyNumberSuggestions">
+                          <button type="button" (click)="pickCompanyNumber(s)">{{ s }}</button>
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="field-error" *ngIf="g.get('companyNumber')?.touched && g.get('companyNumber')?.invalid">
+                      Le numéro d'entreprise est obligatoire.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================
+                     SIÈGE SOCIAL (HQ)
+                ========================== -->
+                <div class="section-head">
+                  <h2>Siège social (HQ)</h2>
+                  <p class="muted">Adresse du centre (pas les sites/agréments).</p>
+                </div>
+
+                <div class="grid-2">
+                  <div class="row">
+                    <label>Rue</label>
+                    <div class="autocomplete">
+                      <input
+                        type="text"
+                        formControlName="hqStreet"
+                        maxlength="180"
+                        placeholder="Ex: Rue de Namur"
+                        autocomplete="off"
+                        (input)="onStreetInput(i)"
+                        (focus)="onStreetFocus(i)"
+                        (blur)="onStreetBlur()"
+                      />
+                      <ul class="suggestions" *ngIf="showStreetSuggestions && activeRowIndex === i && streetSuggestions.length > 0">
+                        <li *ngFor="let s of streetSuggestions">
+                          <button type="button" (click)="pickStreet(s)">{{ s }}</button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <label>Numéro</label>
+                    <div class="autocomplete">
+                      <input
+                        type="text"
+                        formControlName="hqNumber"
+                        maxlength="30"
+                        placeholder="Ex: 12A"
+                        autocomplete="off"
+                        (input)="onHqNumberInput(i)"
+                        (focus)="onHqNumberFocus(i)"
+                        (blur)="onHqNumberBlur()"
+                      />
+                      <ul class="suggestions" *ngIf="showHqNumberSuggestions && activeRowIndex === i && hqNumberSuggestions.length > 0">
+                        <li *ngFor="let s of hqNumberSuggestions">
+                          <button type="button" (click)="pickHqNumber(s)">{{ s }}</button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <label>Code postal</label>
+                    <div class="autocomplete">
+                      <input
+                        type="text"
+                        formControlName="hqPostalCode"
+                        maxlength="20"
+                        placeholder="Ex: 1000"
+                        autocomplete="off"
+                        (input)="onPostalCodeInput(i)"
+                        (focus)="onPostalCodeFocus(i)"
+                        (blur)="onPostalCodeBlur()"
+                      />
+                      <ul class="suggestions" *ngIf="showPostalCodeSuggestions && activeRowIndex === i && postalCodeSuggestions.length > 0">
+                        <li *ngFor="let s of postalCodeSuggestions">
+                          <button type="button" (click)="pickPostalCode(s)">{{ s }}</button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <label>Ville</label>
+                    <div class="autocomplete">
+                      <input
+                        type="text"
+                        formControlName="hqCity"
+                        maxlength="120"
+                        placeholder="Ex: Bruxelles"
+                        autocomplete="off"
+                        (input)="onCityInput(i)"
+                        (focus)="onCityFocus(i)"
+                        (blur)="onCityBlur()"
+                      />
+                      <ul class="suggestions" *ngIf="showCitySuggestions && activeRowIndex === i && citySuggestions.length > 0">
+                        <li *ngFor="let s of citySuggestions">
+                          <button type="button" (click)="pickCity(s)">{{ s }}</button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <label>Province</label>
+                    <select formControlName="hqProvince">
+                      <option value="">— Sélectionner —</option>
+                      <option value="Anvers">Anvers</option>
+                      <option value="Brabant flamand">Brabant flamand</option>
+                      <option value="Brabant wallon">Brabant wallon</option>
+                      <option value="Bruxelles-Capitale">Bruxelles-Capitale</option>
+                      <option value="Flandre-Occidentale">Flandre-Occidentale</option>
+                      <option value="Flandre-Orientale">Flandre-Orientale</option>
+                      <option value="Hainaut">Hainaut</option>
+                      <option value="Liège">Liège</option>
+                      <option value="Limbourg">Limbourg</option>
+                      <option value="Luxembourg">Luxembourg</option>
+                      <option value="Namur">Namur</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- =========================
+                     ASSOCIATIONS
+                ========================== -->
+                <div class="section-head">
+                  <h2>Associations</h2>
+                  <p class="muted">Sélection multiple possible.</p>
+                </div>
+
+                <div class="grid-2">
+                  <div class="row">
+                    <label>Secteurs associés</label>
+                    <input type="text" class="list-search" placeholder="Rechercher un secteur..."
+                      [(ngModel)]="sectorSearch[i]" [ngModelOptions]="{standalone: true}" />
+                    <ul class="multi-list">
+                      <li
+                        *ngFor="let s of filteredSectorsFor(i)"
+                        [class.selected]="items.at(i).get('sectorIds')?.value?.includes(s.id!)"
+                        (click)="toggleMultiItem(s.id!, i, 'sectorIds')"
+                      >{{ s.name }}</li>
+                    </ul>
+                    <div class="hint">Cliquez pour sélectionner / désélectionner</div>
+                  </div>
+
+                  <div class="row">
+                    <label>Centres pilotes associés</label>
+                    <input type="text" class="list-search" placeholder="Rechercher un centre pilote..."
+                      [(ngModel)]="pilotCenterSearch[i]" [ngModelOptions]="{standalone: true}" />
+                    <ul class="multi-list">
+                      <li
+                        *ngFor="let pc of filteredPilotCentersFor(i)"
+                        [class.selected]="items.at(i).get('pilotCenterIds')?.value?.includes(pc.id!)"
+                        (click)="toggleMultiItem(pc.id!, i, 'pilotCenterIds')"
+                      >{{ pc.name }}</li>
+                    </ul>
+                    <div class="hint">Cliquez pour sélectionner / désélectionner</div>
+                  </div>
+                </div>
+
+                <!-- ERREUR LIGNE -->
+                <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                  {{ rowStates[i]?.error }}
+                </div>
+
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+                {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+              </button>
+              <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+                Enregistrer & continuer
+              </button>
+              <a class="btn-secondary" routerLink="/training-centers">Annuler</a>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>

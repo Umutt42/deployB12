@@ -1,0 +1,59 @@
+@import '../../../../shared/styles/create-page.css';
+
+/* ─── Styles propres à training-center-create ─── */
+
+/* max-width override (shared = 860px) */
+.form { max-width: 980px; }
+
+/* Focus colors in training-center-create use var(--primary-hover) border */
+.row input:focus,
+.row textarea:focus,
+.row select:focus {
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 3px rgba(27, 110, 168, 0.15);
+}
+
+/* grid-2 breakpoint differs from shared (shared = 700px, here 880px) */
+@media (min-width: 880px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+  }
+}
+
+/* muted paragraph inside section-head */
+.muted {
+  color: #6c7a86;
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+/* Hint inside training-center-create rows */
+.hint {
+  font-size: 12px;
+  color: #6c7a86;
+  margin-top: 4px;
+}
+
+/* List-search focus uses var(--primary-hover) color */
+.list-search:focus { border-color: var(--primary-hover); }
+
+/* pill-saving / pill-success / pill-error variants */
+.pill-saving  { background: #eef5ff; border-color: #cfe1ff; color: #1d4ed8; }
+.pill-success { background: #ecfdf3; border-color: #c6f6d5; color: #065f46; }
+.pill-error   { background: #ffe8e8; border-color: #ffbcbc; color: #9b1c1c; }
+
+/* batch-item uses a lighter bg here vs shared */
+.batch-item {
+  border: 1px solid #d7dfe6;
+  background: #f9fbfc;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* item-left helper */
+.item-left { display: flex; align-items: center; gap: 10px; }
+.item-number { font-weight: 700; color: #1f2a33; }
+
+/* batch-head title */
+.batch-title { color: #1f2a33; font-size: 14px; }

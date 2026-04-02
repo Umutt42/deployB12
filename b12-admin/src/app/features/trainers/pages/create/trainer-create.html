@@ -1,0 +1,240 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/trainers">Formateur·trices</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter un ou plusieurs formateur·trices</h1>
+        </div>
+        <div class="head-actions">
+          <div class="import-dropdown" [class.open]="showImportMenu" (click)="$event.stopPropagation()">
+            <button class="btn-secondary" type="button" (click)="toggleImportMenu()" [disabled]="loading">Importer ▾</button>
+            <div class="import-menu">
+              <button type="button" (click)="handleImport('csv')" [disabled]="loading">Importer CSV</button>
+              <button type="button" (click)="handleImport('xlsx')" [disabled]="loading">Importer Excel</button>
+            </div>
+          </div>
+          <input type="file" #importInput style="display:none" (change)="onImportFileSelected($event)" />
+          <a class="btn-secondary" routerLink="/trainers">Retour</a>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+
+          <!-- BATCH HEADER -->
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> formateur·trice(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un·e formateur·trice
+            </button>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">{{ error }}</div>
+
+          <!-- LISTE -->
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="trainer-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+
+              <!-- HEADER LIGNE -->
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Formateur·trice #{{ i + 1 }}</div>
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving':  rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error':   rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{ rowStates[i]?.status === 'saving'  ? 'Enregistrement...'
+                      : rowStates[i]?.status === 'success' ? 'OK'
+                      : rowStates[i]?.status === 'error'   ? 'Erreur'
+                      : 'Prêt' }}
+                  </span>
+                </div>
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer ce formateur·trice"
+                >🗑</button>
+              </div>
+
+              <!-- =============================================
+                   INFORMATIONS PERSONNELLES
+              ============================================== -->
+              <div class="section-head">
+                <h2>Informations personnelles</h2>
+                <p class="muted">Les champs marqués * sont obligatoires.</p>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Prénom *</label>
+                  <input type="text" formControlName="firstName" maxlength="100" placeholder="Ex: Marie" />
+                  <div class="field-error" *ngIf="g.get('firstName')?.touched && g.get('firstName')?.invalid">
+                    Le prénom est obligatoire.
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label>Nom *</label>
+                  <input type="text" formControlName="lastName" maxlength="100" placeholder="Ex: Dupont" />
+                  <div class="field-error" *ngIf="g.get('lastName')?.touched && g.get('lastName')?.invalid">
+                    Le nom est obligatoire.
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label>E-mail</label>
+                  <input type="email" formControlName="email" maxlength="180" placeholder="Ex: marie.dupont@example.com" />
+                  <div class="field-error" *ngIf="g.get('email')?.touched && g.get('email')?.invalid">
+                    L'adresse e-mail n'est pas valide.
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label>Numéro de téléphone</label>
+                  <input type="text" formControlName="phone" maxlength="50" placeholder="Ex: +32 81 00 00 00" (blur)="onPhoneBlur($event, g.get('phone'))" />
+                </div>
+
+                <div class="row">
+                  <label>Numéro de phytolicence</label>
+                  <input type="text" formControlName="phytolicenceNumber" maxlength="10" placeholder="Ex: 12.A.12345 ou 12.1.12345" (input)="onPhytolicenceInput($event, g.get('phytolicenceNumber'))" />
+                  <small class="muted">Format : 2 chiffres · 1 lettre ou chiffre · 5 chiffres (ex: 12.A.12345 ou 12.1.12345) — les points s'insèrent automatiquement</small>
+                </div>
+              </div>
+
+              <!-- =============================================
+                   AGRÉMENT FORMATION
+              ============================================== -->
+              <div class="section-head">
+                <h2>Agrément formation</h2>
+              </div>
+
+              <div class="row">
+                <label>Agréments formation associés</label>
+                <input
+                  *ngIf="trainingAccreditations.length > 0"
+                  type="text"
+                  class="list-search"
+                  placeholder="Rechercher un agrément..."
+                  [(ngModel)]="accreditationSearch[i]"
+                  [ngModelOptions]="{standalone: true}"
+                />
+                <div class="checkbox-list" *ngIf="trainingAccreditations.length > 0; else noAccreditations">
+                  <ng-container *ngIf="filteredAccreditationsFor(i).length > 0; else noAccreditationMatch">
+                    <label class="checkbox-item" *ngFor="let ta of filteredAccreditationsFor(i)">
+                    <input
+                      type="checkbox"
+                      [checked]="isAccreditationSelected(i, ta.id!)"
+                      (change)="toggleAccreditation(i, ta.id!)"
+                    />
+                    {{ ta.accreditationNumber ? ta.accreditationNumber + ' — ' : '' }}{{ ta.title }}
+                  </label>
+                  </ng-container>
+                  <ng-template #noAccreditationMatch>
+                    <span class="muted">Aucun résultat pour « {{ accreditationSearch[i] }} ».</span>
+                  </ng-template>
+                </div>
+                <ng-template #noAccreditations>
+                  <span class="muted">Aucun agrément disponible.</span>
+                </ng-template>
+              </div>
+
+              <!-- =============================================
+                   ORGANISMES PARTENAIRES
+              ============================================== -->
+              <div class="section-head">
+                <h2>Organismes partenaires</h2>
+              </div>
+
+              <div class="row">
+                <input
+                  *ngIf="organisms.length > 0"
+                  type="text"
+                  class="list-search"
+                  placeholder="Rechercher un organisme..."
+                  [(ngModel)]="organismSearch[i]"
+                  [ngModelOptions]="{standalone: true}"
+                />
+                <div class="checkbox-list" *ngIf="organisms.length > 0; else noOrganisms">
+                  <ng-container *ngIf="filteredOrganismsFor(i).length > 0; else noOrganismMatch">
+                    <label class="checkbox-item" *ngFor="let o of filteredOrganismsFor(i)">
+                    <input
+                      type="checkbox"
+                      [checked]="isOrganismSelected(i, o.id!)"
+                      (change)="toggleOrganism(i, o.id!)"
+                    />
+                    {{ o.name }}
+                    <span class="muted" *ngIf="o.abbreviation"> ({{ o.abbreviation }})</span>
+                  </label>
+                  </ng-container>
+                  <ng-template #noOrganismMatch>
+                    <span class="muted">Aucun résultat pour « {{ organismSearch[i] }} ».</span>
+                  </ng-template>
+                </div>
+                <ng-template #noOrganisms>
+                  <span class="muted">Aucun organisme disponible.</span>
+                </ng-template>
+              </div>
+
+              <!-- =============================================
+                   COMMENTAIRE
+              ============================================== -->
+              <div class="section-head">
+                <h2>Commentaire</h2>
+              </div>
+
+              <div class="row">
+                <textarea formControlName="comment" rows="4" maxlength="1000" placeholder="Remarques..."></textarea>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+
+            </div>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+              Enregistrer &amp; continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/trainers">Annuler</a>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

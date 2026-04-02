@@ -1,0 +1,517 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+
+      <!-- ── En-tête ───────────────────────────────────────────── -->
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \ Rapport graphique
+          </div>
+          <h1>Rapport graphique</h1>
+          <p class="page-desc">
+            Prévisualisation des statistiques incluses dans le rapport PDF.
+            Le PDF est généré côté serveur avec <strong>JFreeChart</strong>.
+          </p>
+        </div>
+        <button class="btn-export-xlsx" (click)="exportXlsx()" [disabled]="exporting || loading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+          </svg>
+          {{ exporting ? 'Génération...' : 'Télécharger Excel' }}
+        </button>
+        <button class="btn-export-pdf" (click)="exportPdf()" [disabled]="exporting || loading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+          </svg>
+          {{ exporting ? 'Génération...' : 'Télécharger le PDF' }}
+        </button>
+      </div>
+
+      <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+      <!-- ── Skeleton ──────────────────────────────────────────── -->
+      <ng-container *ngIf="loading">
+        <div class="sk-row sk-row-4">
+          <div class="sk-block sk-card" *ngFor="let _ of [1,2,3,4]"></div>
+        </div>
+        <div class="sk-block sk-chart" style="margin-top:24px"></div>
+        <div class="sk-row" style="margin-top:16px">
+          <div class="sk-block sk-pie"></div>
+          <div class="sk-block sk-pie"></div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="stats && !loading">
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 1 — KPIs principaux (8 cartes)
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title">Vue d'ensemble</div>
+        <div class="kpi-grid">
+
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-label">Centres de formation</div>
+            <div class="kpi-val">{{ stats.trainingCentersActive }}</div>
+            <div class="kpi-sub">actifs · {{ stats.trainingCentersArchived }} archivés</div>
+            <div class="kpi-bar">
+              <div class="kpi-bar-fill kpi-bar-blue"
+                [style.width]="pct(stats.trainingCentersActive, stats.trainingCentersActive + stats.trainingCentersArchived) + '%'"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-indigo">
+            <div class="kpi-label">Agréments centres</div>
+            <div class="kpi-val">{{ stats.centerAccreditationsActive }}</div>
+            <div class="kpi-sub">actifs · {{ stats.centerAccreditationsArchived }} archivés</div>
+            <div class="kpi-bar">
+              <div class="kpi-bar-fill kpi-bar-indigo"
+                [style.width]="pct(stats.centerAccreditationsActive, stats.centerAccreditationsActive + stats.centerAccreditationsArchived) + '%'"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-label">Agréments formations</div>
+            <div class="kpi-val">{{ stats.trainingAccreditationsActive }}</div>
+            <div class="kpi-sub">actifs · {{ stats.trainingAccreditationsArchived }} archivés</div>
+            <div class="kpi-bar">
+              <div class="kpi-bar-fill kpi-bar-purple"
+                [style.width]="pct(stats.trainingAccreditationsActive, stats.trainingAccreditationsActive + stats.trainingAccreditationsArchived) + '%'"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-teal">
+            <div class="kpi-label">Formateur·trices</div>
+            <div class="kpi-val">{{ stats.trainersActive }}</div>
+            <div class="kpi-sub">actifs · {{ stats.trainersArchived }} archivés</div>
+            <div class="kpi-bar">
+              <div class="kpi-bar-fill kpi-bar-teal"
+                [style.width]="pct(stats.trainersActive, stats.trainersActive + stats.trainersArchived) + '%'"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-label">Activités (année en cours)</div>
+            <div class="kpi-val">{{ stats.activitiesThisYear }}</div>
+            <div class="kpi-sub">{{ stats.activitiesTotal }} au total</div>
+            <div class="kpi-bar">
+              <div class="kpi-bar-fill kpi-bar-green"
+                [style.width]="pct(stats.activitiesThisYear, stats.activitiesTotal) + '%'"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" [class.kpi-orange]="stats.centerAccreditationsExpiringIn30Days === 0" [class.kpi-red]="stats.centerAccreditationsExpiringIn30Days > 0">
+            <div class="kpi-label">Agréments expirant (30 j)</div>
+            <div class="kpi-val" [class.warn]="stats.centerAccreditationsExpiringIn30Days > 0">{{ stats.centerAccreditationsExpiringIn30Days }}</div>
+            <div class="kpi-sub">{{ stats.centerAccreditationsExpiringIn60Days }} en 60 jours</div>
+          </div>
+
+          <div class="kpi-card kpi-slate">
+            <div class="kpi-label">Thématiques</div>
+            <div class="kpi-val">{{ stats.themesTotal }}</div>
+            <div class="kpi-sub">référentiels actifs</div>
+          </div>
+
+          <div class="kpi-card kpi-slate">
+            <div class="kpi-label">Types de phytolicences</div>
+            <div class="kpi-val">{{ stats.licenseTypesTotal }}</div>
+            <div class="kpi-sub">référentiels actifs</div>
+          </div>
+
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 2 — Activités mensuelles
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Activités de formation — 12 derniers mois</div>
+        <div class="chart-card">
+          <div class="bar-chart">
+            <div
+              *ngFor="let m of stats.activitiesLast12Months"
+              class="bar-col"
+              [title]="monthLabel(m) + ' : ' + m.count + ' activité(s)'"
+            >
+              <span class="bar-count" *ngIf="m.count > 0">{{ m.count }}</span>
+              <div class="bar" [style.height]="barWidth(m.count)"></div>
+              <div class="bar-label">{{ monthLabel(m) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 3 — Actifs vs Archivés
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Actifs vs Archivés</div>
+        <div class="chart-card">
+          <div class="grouped-bars">
+
+            <div class="grouped-row" *ngFor="let row of activeArchivedRows()">
+              <div class="grouped-label">{{ row.label }}</div>
+              <div class="grouped-track">
+                <div class="grouped-seg seg-active" [style.width]="row.activePct + '%'"
+                  [title]="'Actifs : ' + row.active"></div>
+                <div class="grouped-seg seg-archived" [style.width]="row.archivedPct + '%'"
+                  [title]="'Archivés : ' + row.archived"></div>
+              </div>
+              <div class="grouped-nums">
+                <span class="num-active">{{ row.active }}</span>
+                <span class="num-sep">/</span>
+                <span class="num-archived">{{ row.archived }}</span>
+              </div>
+            </div>
+
+          </div>
+          <div class="grouped-legend">
+            <span class="dot" style="background:#3b82f6;display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px"></span> Actifs
+            &nbsp;&nbsp;
+            <span class="dot" style="background:#d1d5db;display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px"></span> Archivés
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 4 — Statuts des agréments
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Répartition des statuts</div>
+        <div class="pie-row">
+
+          <!-- Agréments centres -->
+          <div class="pie-card">
+            <div class="pie-card-title">Agréments centres <span class="pie-total-inline">— {{ caTotal() }} total</span></div>
+            <div class="legend">
+              <div class="legend-item">
+                <span class="dot dot-green"></span>
+                <span class="legend-label">Accepté</span>
+                <span class="legend-val">{{ stats.caAccepted }} <em>({{ pct(stats.caAccepted, caTotal()) }}%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="dot dot-yellow"></span>
+                <span class="legend-label">En attente</span>
+                <span class="legend-val">{{ stats.caPending }} <em>({{ pct(stats.caPending, caTotal()) }}%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="dot dot-blue"></span>
+                <span class="legend-label">Reçu</span>
+                <span class="legend-val">{{ stats.caReceived }} <em>({{ pct(stats.caReceived, caTotal()) }}%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="dot dot-red"></span>
+                <span class="legend-label">Refusé</span>
+                <span class="legend-val">{{ stats.caRefused }} <em>({{ pct(stats.caRefused, caTotal()) }}%)</em></span>
+              </div>
+            </div>
+            <div class="stacked-bar">
+              <div class="seg seg-green"  [style.width]="pct(stats.caAccepted,  caTotal()) + '%'" *ngIf="stats.caAccepted  > 0"></div>
+              <div class="seg seg-yellow" [style.width]="pct(stats.caPending,   caTotal()) + '%'" *ngIf="stats.caPending   > 0"></div>
+              <div class="seg seg-blue"   [style.width]="pct(stats.caReceived,  caTotal()) + '%'" *ngIf="stats.caReceived  > 0"></div>
+              <div class="seg seg-red"    [style.width]="pct(stats.caRefused,   caTotal()) + '%'" *ngIf="stats.caRefused   > 0"></div>
+            </div>
+          </div>
+
+          <!-- Agréments formations -->
+          <div class="pie-card">
+            <div class="pie-card-title">Agréments formations <span class="pie-total-inline">— {{ taTotal() }} total</span></div>
+            <div class="legend">
+              <div class="legend-item">
+                <span class="dot dot-green"></span>
+                <span class="legend-label">Accepté</span>
+                <span class="legend-val">{{ stats.taAccepted }} <em>({{ pct(stats.taAccepted, taTotal()) }}%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="dot dot-yellow"></span>
+                <span class="legend-label">En attente</span>
+                <span class="legend-val">{{ stats.taPending }} <em>({{ pct(stats.taPending, taTotal()) }}%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="dot dot-blue"></span>
+                <span class="legend-label">Reçu</span>
+                <span class="legend-val">{{ stats.taReceived }} <em>({{ pct(stats.taReceived, taTotal()) }}%)</em></span>
+              </div>
+              <div class="legend-item">
+                <span class="dot dot-red"></span>
+                <span class="legend-label">Refusé</span>
+                <span class="legend-val">{{ stats.taRefused }} <em>({{ pct(stats.taRefused, taTotal()) }}%)</em></span>
+              </div>
+            </div>
+            <div class="stacked-bar">
+              <div class="seg seg-green"  [style.width]="pct(stats.taAccepted,  taTotal()) + '%'" *ngIf="stats.taAccepted  > 0"></div>
+              <div class="seg seg-yellow" [style.width]="pct(stats.taPending,   taTotal()) + '%'" *ngIf="stats.taPending   > 0"></div>
+              <div class="seg seg-blue"   [style.width]="pct(stats.taReceived,  taTotal()) + '%'" *ngIf="stats.taReceived  > 0"></div>
+              <div class="seg seg-red"    [style.width]="pct(stats.taRefused,   taTotal()) + '%'" *ngIf="stats.taRefused   > 0"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 5 — Données de référence
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Données de référence</div>
+        <div class="ref-grid">
+          <div class="ref-card">
+            <div class="ref-icon ref-icon-blue">T</div>
+            <div class="ref-info">
+              <div class="ref-label">Thématiques</div>
+              <div class="ref-val">{{ stats.themesTotal }}</div>
+            </div>
+          </div>
+          <div class="ref-card">
+            <div class="ref-icon ref-icon-indigo">L</div>
+            <div class="ref-info">
+              <div class="ref-label">Types de phytolicences</div>
+              <div class="ref-val">{{ stats.licenseTypesTotal }}</div>
+            </div>
+          </div>
+          <div class="ref-card">
+            <div class="ref-icon ref-icon-teal">S</div>
+            <div class="ref-info">
+              <div class="ref-label">Secteurs</div>
+              <div class="ref-val">{{ stats.sectorsTotal }}</div>
+            </div>
+          </div>
+          <div class="ref-card">
+            <div class="ref-icon ref-icon-purple">O</div>
+            <div class="ref-info">
+              <div class="ref-label">Organismes</div>
+              <div class="ref-val">{{ stats.organismsTotal }}</div>
+            </div>
+          </div>
+          <div class="ref-card">
+            <div class="ref-icon ref-icon-green">P</div>
+            <div class="ref-info">
+              <div class="ref-label">Centres pilotes</div>
+              <div class="ref-val">{{ stats.pilotCentersTotal }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 6 — Alertes expirations
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Alertes — Expirations agréments centres</div>
+        <div class="alert-grid">
+          <div class="alert-card" [class.alert-danger]="stats.centerAccreditationsExpiringIn30Days > 0"
+                                  [class.alert-ok]="stats.centerAccreditationsExpiringIn30Days === 0">
+            <div class="alert-num">{{ stats.centerAccreditationsExpiringIn30Days }}</div>
+            <div class="alert-label">Expirant dans les 30 jours</div>
+          </div>
+          <div class="alert-card" [class.alert-warning]="stats.centerAccreditationsExpiringIn60Days > 0"
+                                  [class.alert-ok]="stats.centerAccreditationsExpiringIn60Days === 0">
+            <div class="alert-num">{{ stats.centerAccreditationsExpiringIn60Days }}</div>
+            <div class="alert-label">Expirant dans les 60 jours</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:16px">Alertes — Expirations agréments formations</div>
+        <div class="alert-grid">
+          <div class="alert-card" [class.alert-danger]="stats.trainingAccreditationsExpiringIn30Days > 0"
+                                  [class.alert-ok]="stats.trainingAccreditationsExpiringIn30Days === 0">
+            <div class="alert-num">{{ stats.trainingAccreditationsExpiringIn30Days }}</div>
+            <div class="alert-label">Expirant dans les 30 jours</div>
+          </div>
+          <div class="alert-card" [class.alert-warning]="stats.trainingAccreditationsExpiringIn60Days > 0"
+                                  [class.alert-ok]="stats.trainingAccreditationsExpiringIn60Days === 0">
+            <div class="alert-num">{{ stats.trainingAccreditationsExpiringIn60Days }}</div>
+            <div class="alert-label">Expirant dans les 60 jours</div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 7 — Activités par province
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Activités de formation par province</div>
+        <div class="chart-card" *ngIf="stats.activitiesByProvince.length > 0; else noProvince">
+          <div class="province-bars">
+            <div class="province-row" *ngFor="let p of stats.activitiesByProvince">
+              <div class="province-label">{{ p.province || 'Non renseignée' }}</div>
+              <div class="province-track">
+                <div class="province-bar" [style.width]="provinceBarWidth(p.count)"
+                  [title]="p.province + ' : ' + p.count + ' activité(s)'"></div>
+              </div>
+              <div class="province-count">{{ p.count }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noProvince>
+          <div class="no-data">Aucune donnée de province disponible.</div>
+        </ng-template>
+
+      
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 8 — Activités par type de licence
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Activités par type de phytolicence</div>
+        <div class="chart-card" *ngIf="stats.activitiesByLicenseType.length > 0; else noLicenseType">
+          <div class="named-bars">
+            <div class="named-row" *ngFor="let item of stats.activitiesByLicenseType">
+              <div class="named-label" [title]="item.name">{{ item.name }}</div>
+              <div class="named-track">
+                <div class="named-bar named-bar-violet"
+                  [style.width]="namedBarWidth(item.count, stats.activitiesByLicenseType)"
+                  [title]="item.name + ' : ' + item.count + ' activite(s)'"></div>
+              </div>
+              <div class="named-count">{{ item.count }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noLicenseType>
+          <div class="no-data">Aucune activité liée à un type de licence.</div>
+        </ng-template>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 9 — Activités par thème
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Activités par thématique</div>
+        <div class="chart-card" *ngIf="stats.activitiesByTheme.length > 0; else noTheme">
+          <div class="named-bars">
+            <div class="named-row" *ngFor="let item of stats.activitiesByTheme">
+              <div class="named-label" [title]="item.name">{{ item.name }}</div>
+              <div class="named-track">
+                <div class="named-bar named-bar-amber"
+                  [style.width]="namedBarWidth(item.count, stats.activitiesByTheme)"
+                  [title]="item.name + ' : ' + item.count + ' activite(s)'"></div>
+              </div>
+              <div class="named-count">{{ item.count }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noTheme>
+          <div class="no-data">Aucune activité liée à une thématique.</div>
+        </ng-template>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 10 — Top formateurs
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Top 10 formateur·trices les plus actif·ves</div>
+        <div class="chart-card" *ngIf="stats.topTrainers.length > 0; else noTrainers">
+          <div class="named-bars">
+            <div class="named-row" *ngFor="let item of stats.topTrainers; let i = index">
+              <div class="named-label">
+                <span class="named-rank">{{ i + 1 }}</span>
+                {{ item.name }}
+              </div>
+              <div class="named-track">
+                <div class="named-bar named-bar-teal"
+                  [style.width]="namedBarWidth(item.count, stats.topTrainers)"
+                  [title]="item.name + ' : ' + item.count + ' activite(s)'"></div>
+              </div>
+              <div class="named-count">{{ item.count }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noTrainers>
+          <div class="no-data">Aucune activité liée à un formateur.</div>
+        </ng-template>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 11 — Agréments de formation par centre
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Agréments de formation par centre (top 15)</div>
+        <div class="chart-card" *ngIf="stats.trainingAccreditationsByCenter.length > 0; else noCenter">
+          <div class="named-bars">
+            <div class="named-row" *ngFor="let item of stats.trainingAccreditationsByCenter">
+              <div class="named-label" [title]="item.name">{{ item.name }}</div>
+              <div class="named-track">
+                <div class="named-bar named-bar-orange"
+                  [style.width]="namedBarWidth(item.count, stats.trainingAccreditationsByCenter)"
+                  [title]="item.name + ' : ' + item.count + ' agrement(s)'"></div>
+              </div>
+              <div class="named-count">{{ item.count }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noCenter>
+          <div class="no-data">Aucun agrément de formation actif.</div>
+        </ng-template>
+
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 12 — Évolution des agréments (12 mois)
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Évolution des agréments — 12 derniers mois</div>
+        <div class="pie-row">
+
+          <!-- CA trend -->
+          <div class="chart-card">
+            <div class="trend-chart-title">Agréments centres</div>
+            <div class="bar-chart bar-chart-indigo">
+              <div
+                *ngFor="let m of stats.centerAccreditationsLast12Months"
+                class="bar-col"
+                [title]="monthLabel(m) + ' : ' + m.count + ' agrément(s)'"
+              >
+                <span class="bar-count" *ngIf="m.count > 0">{{ m.count }}</span>
+                <div class="bar bar-indigo" [style.height]="monthlyBarWidth(m.count, stats.centerAccreditationsLast12Months)"></div>
+                <div class="bar-label">{{ monthLabel(m) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TA trend -->
+          <div class="chart-card">
+            <div class="trend-chart-title">Agréments formations</div>
+            <div class="bar-chart bar-chart-purple">
+              <div
+                *ngFor="let m of stats.trainingAccreditationsLast12Months"
+                class="bar-col"
+                [title]="monthLabel(m) + ' : ' + m.count + ' agrément(s)'"
+              >
+                <span class="bar-count" *ngIf="m.count > 0">{{ m.count }}</span>
+                <div class="bar bar-purple" [style.height]="monthlyBarWidth(m.count, stats.trainingAccreditationsLast12Months)"></div>
+                <div class="bar-label">{{ monthLabel(m) }}</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 13 — Délai moyen de traitement
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Délai moyen de traitement (réception → début agrément)</div>
+        <div class="kpi-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="kpi-card kpi-indigo">
+            <div class="kpi-label">Agrément centre</div>
+            <div class="kpi-val" [class.warn]="stats.avgProcessingDaysCa === 0">
+              {{ stats.avgProcessingDaysCa === 0 ? 'N/A' : (stats.avgProcessingDaysCa | number:'1.0-0') + ' j' }}
+            </div>
+            <div class="kpi-sub">moyenne sur agréments acceptés</div>
+          </div>
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-label">Agrément formation</div>
+            <div class="kpi-val" [class.warn]="stats.avgProcessingDaysTa === 0">
+              {{ stats.avgProcessingDaysTa === 0 ? 'N/A' : (stats.avgProcessingDaysTa | number:'1.0-0') + ' j' }}
+            </div>
+            <div class="kpi-sub">moyenne sur agréments acceptés</div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════
+             SECTION 14 — Activités par secteur
+             ════════════════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:28px">Activités de formation par secteur</div>
+        <div class="chart-card" *ngIf="stats.activitiesBySector.length > 0; else noSector">
+          <div class="named-bars">
+            <div class="named-row" *ngFor="let item of stats.activitiesBySector">
+              <div class="named-label" [title]="item.name">{{ item.name }}</div>
+              <div class="named-track">
+                <div class="named-bar named-bar-slate"
+                  [style.width]="namedBarWidth(item.count, stats.activitiesBySector)"
+                  [title]="item.name + ' : ' + item.count + ' activite(s)'"></div>
+              </div>
+              <div class="named-count">{{ item.count }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noSector>
+          <div class="no-data">Aucune activité liée à un secteur.</div>
+        </ng-template>
+</ng-container>
+    </main>
+  </div>
+</div>

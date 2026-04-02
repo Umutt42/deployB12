@@ -1,0 +1,532 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/training-accreditations">Agréments formations</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter un ou plusieurs agréments formation</h1>
+        </div>
+        <a class="btn-secondary" routerLink="/training-accreditations">Retour</a>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+
+          <!-- BATCH HEADER -->
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> agrément(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un agrément
+            </button>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">{{ error }}</div>
+
+          <!-- LISTE DES AGRÉMENTS -->
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="accreditation-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+
+              <!-- HEADER LIGNE -->
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Agrément #{{ i + 1 }}</div>
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving':  rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error':   rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{ rowStates[i]?.status === 'saving'  ? 'Enregistrement...'
+                      : rowStates[i]?.status === 'success' ? 'OK'
+                      : rowStates[i]?.status === 'error'   ? 'Erreur'
+                      : 'Prêt' }}
+                  </span>
+                </div>
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer cet agrément"
+                >🗑</button>
+              </div>
+
+              <!-- =============================================
+                   TYPE D'AGRÉMENT
+              ============================================== -->
+              <div class="section-head">
+                <h2>Type d'agrément</h2>
+              </div>
+              <div class="row">
+                <div class="type-toggle">
+                  <button type="button"
+                    [class.active]="g.get('type')?.value !== 'SUB_MODULES'"
+                    (click)="setType(i, 'COMPLETE')">
+                    Complet
+                  </button>
+                  <button type="button"
+                    [class.active]="g.get('type')?.value === 'SUB_MODULES'"
+                    (click)="setType(i, 'SUB_MODULES')">
+                    Sous-modules
+                  </button>
+                </div>
+              </div>
+
+              <!-- =============================================
+                   AGRÉMENT (dates — à remplir en premier)
+              ============================================== -->
+              <div class="section-head">
+                <h2>Agrément</h2>
+                <p class="muted">Renseignez la date de début en premier pour filtrer les agréments centre disponibles.</p>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Numéro d'agrément</label>
+                  <input type="text" formControlName="accreditationNumber" maxlength="60" placeholder="Ex: FA-2024-001" />
+                </div>
+
+                <div class="row">
+                  <label>Statut de la demande</label>
+                  <select formControlName="requestStatus">
+                    <option value="">-- Sélectionner --</option>
+                    <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+                  </select>
+                </div>
+
+                <div class="row">
+                  <label>Date de réception</label>
+                  <input type="date" formControlName="receivedDate" />
+                </div>
+
+                <div class="row">
+                  <!-- spacer -->
+                </div>
+
+                <div class="row">
+                  <label>Début</label>
+                  <input type="date" formControlName="startDate" />
+                </div>
+
+                <div class="row">
+                  <label>Fin</label>
+                  <input type="date" formControlName="endDate" />
+                </div>
+              </div>
+
+              <!-- =============================================
+                   AGRÉMENT CENTRE (type COMPLET seulement)
+              ============================================== -->
+              <ng-container *ngIf="g.get('type')?.value !== 'SUB_MODULES'">
+                <div class="section-head">
+                  <h2>Agrément centre</h2>
+                  <p class="muted">Les champs marqués * sont obligatoires.</p>
+                </div>
+
+                <div class="row" *ngIf="g.get('startDate')?.value; else noStartDateBlock">
+                  <label>Agrément centre *</label>
+                  <span *ngIf="centerAccreditationLoadingList[i]" class="muted">Chargement...</span>
+                  <ng-container *ngIf="!centerAccreditationLoadingList[i]">
+                    <select formControlName="centerAccreditationId">
+                      <option [ngValue]="null">-- Sélectionner un agrément centre --</option>
+                      <option *ngFor="let ca of centerAccreditationOptionsList[i]" [ngValue]="ca.id">
+                        {{ ca.label }}
+                      </option>
+                    </select>
+                    <span *ngIf="(centerAccreditationOptionsList[i]?.length ?? -1) === 0" class="muted">
+                      Aucun agrément centre actif à la date du {{ g.get('startDate')?.value }}.
+                    </span>
+                  </ng-container>
+                  <div class="field-error" *ngIf="g.get('centerAccreditationId')?.touched && g.get('centerAccreditationId')?.invalid">
+                    L'agrément centre est obligatoire.
+                  </div>
+                </div>
+                <ng-template #noStartDateBlock>
+                  <div class="row">
+                    <span class="muted">Veuillez d'abord renseigner la date de début pour voir les agréments centre disponibles.</span>
+                  </div>
+                </ng-template>
+
+                <!-- ORGANISMES PARTENAIRES -->
+                <div class="section-head">
+                  <h2>Organismes partenaires</h2>
+                  <p class="muted">Agréments centre actifs à la date de début.</p>
+                </div>
+
+                <div class="row">
+                  <ng-container *ngIf="g.get('startDate')?.value; else noPartnersDateBlock">
+                    <ng-container *ngIf="(centerAccreditationOptionsList[i]?.length ?? 0) > 0; else noPartnersBlock">
+                      <input
+                        type="text"
+                        class="trainer-search"
+                        placeholder="Rechercher un agrément centre..."
+                        [(ngModel)]="partnerSearchList[i]"
+                        [ngModelOptions]="{standalone: true}"
+                      />
+                      <div class="checkbox-list">
+                        <ng-container *ngIf="filteredPartnersFor(i).length > 0; else noPartnerMatch">
+                          <label class="checkbox-item" *ngFor="let ca of filteredPartnersFor(i)">
+                            <input
+                              type="checkbox"
+                              [checked]="isIdSelected(i, 'partnerAccreditationIds', ca.id)"
+                              (change)="toggleId(i, 'partnerAccreditationIds', ca.id)"
+                            />
+                            {{ ca.label }}
+                          </label>
+                        </ng-container>
+                        <ng-template #noPartnerMatch>
+                          <span class="muted">Aucun résultat pour « {{ partnerSearchList[i] }} ».</span>
+                        </ng-template>
+                      </div>
+                    </ng-container>
+                    <ng-template #noPartnersBlock>
+                      <span class="muted">Aucun agrément centre actif disponible à la date de début.</span>
+                    </ng-template>
+                  </ng-container>
+                  <ng-template #noPartnersDateBlock>
+                    <span class="muted">Veuillez d'abord renseigner la date de début.</span>
+                  </ng-template>
+                </div>
+              </ng-container>
+
+              <!-- =============================================
+                   SOUS-MODULES (type SUB_MODULES seulement)
+              ============================================== -->
+              <ng-container *ngIf="g.get('type')?.value === 'SUB_MODULES'">
+                <div class="section-head">
+                  <h2>Sous-modules</h2>
+                  <p class="muted">Renseignez la date de début en premier pour filtrer les sous-modules valides à cette date. Sélectionnez au minimum 2 sous-modules.</p>
+                </div>
+                <div class="row" *ngIf="!g.get('startDate')?.value">
+                  <span class="muted">Veuillez d'abord renseigner la date de début pour voir les sous-modules disponibles.</span>
+                </div>
+                <div class="row" *ngIf="g.get('startDate')?.value">
+                  <ng-container *ngIf="(validSubModulesList[i]?.length ?? 0) > 0; else noValidSubModules">
+                    <input
+                      type="text"
+                      class="trainer-search"
+                      placeholder="Rechercher un sous-module..."
+                      [(ngModel)]="subModuleSearchList[i]"
+                      [ngModelOptions]="{standalone: true}"
+                    />
+                    <div class="checkbox-list">
+                      <ng-container *ngIf="filteredSubModulesFor(i).length > 0; else noSmMatch">
+                        <label class="checkbox-item" *ngFor="let sm of filteredSubModulesFor(i)">
+                          <input
+                            type="checkbox"
+                            [checked]="isSubModuleSelected(i, sm.id!)"
+                            (change)="toggleSubModule(i, sm.id!)"
+                          />
+                          <span>{{ sm.title }}</span>
+                          <span class="muted" *ngIf="sm.centerAccreditationLabel"> · {{ sm.centerAccreditationLabel }}</span>
+                        </label>
+                      </ng-container>
+                      <ng-template #noSmMatch>
+                        <span class="muted">Aucun résultat pour « {{ subModuleSearchList[i] }} ».</span>
+                      </ng-template>
+                    </div>
+                    <span class="muted sm-count"
+                      [class.sm-count-ok]="(g.get('subModuleIds')?.value?.length ?? 0) >= 2"
+                      [class.sm-count-warn]="(g.get('subModuleIds')?.value?.length ?? 0) < 2">
+                      {{ g.get('subModuleIds')?.value?.length ?? 0 }} sous-module(s) sélectionné(s)
+                      <span *ngIf="(g.get('subModuleIds')?.value?.length ?? 0) < 2"> — minimum 2 requis</span>
+                    </span>
+                    <div class="field-error" *ngIf="g.get('subModuleIds')?.touched && g.get('subModuleIds')?.invalid">
+                      Veuillez sélectionner au minimum 2 sous-modules.
+                    </div>
+                    <div class="sm-centers" *ngIf="selectedSubModuleCentersFor(i).length > 0">
+                      <span class="muted">Centres de formation :</span>
+                      <span class="badge-center" *ngFor="let name of selectedSubModuleCentersFor(i)">{{ name }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #noValidSubModules>
+                    <span class="muted">Aucun sous-module actif à la date du {{ g.get('startDate')?.value }}.</span>
+                  </ng-template>
+                </div>
+              </ng-container>
+
+              <!-- =============================================
+                   TITRE
+              ============================================== -->
+              <div class="section-head">
+                <h2>Titre de l'agrément formation *</h2>
+              </div>
+
+              <div class="row">
+                <input type="text" formControlName="title" placeholder="Ex: Formation phytolicence P2 — Communication" />
+                <div class="field-error" *ngIf="g.get('title')?.touched && g.get('title')?.invalid">
+                  Le titre est obligatoire.
+                </div>
+              </div>
+
+              <!-- =============================================
+                   TYPES DE PHYTOLICENCES
+              ============================================== -->
+              <div class="section-head">
+                <h2>Types de phytolicences</h2>
+              </div>
+
+              <div class="row">
+                <div class="checkbox-list horizontal" *ngIf="licenseTypes.length > 0; else noLt">
+                  <label class="checkbox-item" *ngFor="let lt of licenseTypes">
+                    <input
+                      type="checkbox"
+                      [checked]="isIdSelected(i, 'licenseTypeIds', lt.id)"
+                      (change)="toggleId(i, 'licenseTypeIds', lt.id)"
+                    />
+                    <span class="badge-code">{{ lt.code }}</span>
+                  </label>
+                </div>
+                <ng-template #noLt><span class="muted">Aucun type de phytolicence disponible.</span></ng-template>
+              </div>
+
+              <!-- =============================================
+                   PUBLIC CIBLE
+              ============================================== -->
+              <div class="section-head">
+                <h2>Public cible</h2>
+              </div>
+
+              <div class="row">
+                <textarea formControlName="publicCible" rows="4" placeholder="Ex: Agriculteurs, conseillers phyto..."></textarea>
+              </div>
+
+              <!-- =============================================
+                   TYPE DE FORMATION
+              ============================================== -->
+              <div class="section-head">
+                <h2>Type de formation</h2>
+              </div>
+
+              <div class="grid-2 grid-checkboxes">
+                <div class="row">
+                  <select formControlName="trainingType">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="initial">Initiale</option>
+                    <option value="continuous">Continue</option>
+                  </select>
+                </div>
+                <div class="row">
+                  <label class="checkbox-row">
+                    <input type="checkbox" formControlName="subsidized" />
+                    <span>Subventionné</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- =============================================
+                   FORMATEUR·TRICES
+              ============================================== -->
+              <div class="section-head section-head-row">
+                <h2>Formateur·trices</h2>
+                <button
+                  type="button"
+                  class="btn-filter-toggle"
+                  [class.active]="trainerFilterByCenterList[i]"
+                  [disabled]="!g.get('centerAccreditationId')?.value"
+                  (click)="toggleTrainerFilter(i)"
+                  [title]="!g.get('centerAccreditationId')?.value
+                    ? 'Sélectionnez d\'abord un agrément centre'
+                    : (trainerFilterByCenterList[i] ? 'Afficher tous les formateurs' : 'Afficher seulement les formateurs liés à l\'agrément centre')"
+                >
+                  {{ trainerFilterByCenterList[i] ? 'Tous les formateurs' : 'Liés au centre' }}
+                </button>
+              </div>
+
+              <div class="row">
+                <input
+                  *ngIf="trainers.length > 0"
+                  type="text"
+                  class="trainer-search"
+                  placeholder="Rechercher un·e formateur·trice..."
+                  [(ngModel)]="trainerSearchList[i]"
+                  [ngModelOptions]="{standalone: true}"
+                />
+                <div class="checkbox-list" *ngIf="trainers.length > 0; else noTrainers">
+                  <ng-container *ngIf="filteredTrainersFor(i).length > 0; else noMatch">
+                    <label class="checkbox-item" *ngFor="let tr of filteredTrainersFor(i)">
+                      <input
+                        type="checkbox"
+                        [checked]="isIdSelected(i, 'trainerIds', tr.id!)"
+                        (change)="toggleId(i, 'trainerIds', tr.id!)"
+                      />
+                      {{ tr.firstName }} {{ tr.lastName }}
+                      <span class="muted" *ngIf="tr.email"> · {{ tr.email }}</span>
+                    </label>
+                  </ng-container>
+                  <ng-template #noMatch>
+                    <span class="muted" *ngIf="trainerSearchList[i]">Aucun résultat pour « {{ trainerSearchList[i] }} ».</span>
+                    <span class="muted" *ngIf="!trainerSearchList[i] && trainerFilterByCenterList[i]">Aucun formateur lié à cet agrément centre.</span>
+                  </ng-template>
+                </div>
+                <ng-template #noTrainers>
+                  <span class="muted">Aucun formateur disponible.</span>
+                </ng-template>
+                <button type="button" class="trainer-add-btn" (click)="openTrainerModal(i)">+ Créer un·e formateur·trice</button>
+              </div>
+
+              <!-- =============================================
+                   THÉMATIQUES ET SOUS-THÈMES
+              ============================================== -->
+              <div class="section-head">
+                <h2>Thématiques et sous-thèmes</h2>
+              </div>
+
+              <div class="row">
+                <div class="checkbox-list theme-tree" *ngIf="themes.length > 0; else noThemes">
+                  <ng-container *ngFor="let t of themes">
+                    <label class="checkbox-item theme-item">
+                      <input
+                        type="checkbox"
+                        [checked]="isIdSelected(i, 'themeIds', t.id!)"
+                        (change)="toggleId(i, 'themeIds', t.id!)"
+                      />
+                      <strong>{{ t.name }}</strong>
+                    </label>
+                    <ng-container *ngIf="isIdSelected(i, 'themeIds', t.id!) && getSubThemesForTheme(t.id!).length > 0">
+                      <div class="sub-theme-row" *ngFor="let st of getSubThemesForTheme(t.id!)">
+                        <label class="checkbox-item sub-theme-item">
+                          <input
+                            type="checkbox"
+                            [checked]="isIdSelected(i, 'subThemeIds', st.id!)"
+                            (change)="toggleId(i, 'subThemeIds', st.id!)"
+                          />
+                          {{ st.name }}
+                        </label>
+                        <div class="minutes-field" *ngIf="isIdSelected(i, 'subThemeIds', st.id!)">
+                          <input
+                            type="number" min="0" step="1" placeholder="0"
+                            class="minutes-input"
+                            [value]="subThemeMinutesList[i][st.id!]"
+                            (input)="onSubThemeMinutes(i, st.id!, $event)"
+                          />
+                          <span class="minutes-label">min</span>
+                        </div>
+                      </div>
+                    </ng-container>
+                  </ng-container>
+                </div>
+                <ng-template #noThemes><span class="muted">Aucune thématique disponible.</span></ng-template>
+              </div>
+
+              <!-- =============================================
+                   DURÉE ET POINTS
+              ============================================== -->
+              <div class="section-head">
+                <h2>Durée et points de formation</h2>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Durée (heures)</label>
+                  <input type="number" formControlName="durationHours" min="0" step="0.5" placeholder="Ex: 7" />
+                </div>
+
+                <div class="row">
+                  <label>Prix (€)</label>
+                  <input type="number" formControlName="price" min="0" step="0.01" placeholder="Ex: 250" />
+                </div>
+
+                <div class="row">
+                  <label>Points de formation</label>
+                  <input type="number" formControlName="trainingPoints" min="0" step="1" placeholder="Ex: 3" />
+                </div>
+              </div>
+
+              <!-- =============================================
+                   COMMENTAIRE
+              ============================================== -->
+              <div class="section-head">
+                <h2>Commentaire</h2>
+              </div>
+
+              <div class="row">
+                <textarea formControlName="comment" rows="8" placeholder="Remarques..."></textarea>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+
+            </div>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+              Enregistrer &amp; continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/training-accreditations">Annuler</a>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ─── MODAL AJOUT FORMATEUR ─── -->
+<div class="modal-overlay" *ngIf="showTrainerModal" (click)="closeTrainerModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <h3 class="modal-title">Ajouter un·e formateur·trice</h3>
+    <div *ngIf="trainerModalError" class="error">{{ trainerModalError }}</div>
+    <div class="row">
+      <label>Prénom *</label>
+      <input type="text" [(ngModel)]="newTrainer.firstName" maxlength="100" placeholder="Ex: Marie" />
+    </div>
+    <div class="row">
+      <label>Nom *</label>
+      <input type="text" [(ngModel)]="newTrainer.lastName" maxlength="100" placeholder="Ex: Dupont" />
+    </div>
+    <div class="row">
+      <label>E-mail</label>
+      <input type="email" [(ngModel)]="newTrainer.email" maxlength="180" placeholder="Ex: marie@example.com" />
+    </div>
+    <div class="row">
+      <label>Téléphone</label>
+      <input type="text" [(ngModel)]="newTrainer.phone" maxlength="50" placeholder="Ex: +32 81 00 00 00" (blur)="onModalPhoneBlur($event)" />
+    </div>
+    <div class="row">
+      <label>N° phytolicence</label>
+      <input type="text" [(ngModel)]="newTrainer.phytolicenceNumber" maxlength="11" placeholder="Ex: 123.A.12345" (input)="onPhytolicenceModalInput($event)" />
+      <small class="muted">Format : 3 chiffres · 1 caractère · 5 chiffres</small>
+    </div>
+    <div class="row">
+      <label>Commentaire</label>
+      <textarea [(ngModel)]="newTrainer.comment" rows="3" maxlength="1000" placeholder="Remarques..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-primary" (click)="saveNewTrainer()" [disabled]="trainerModalLoading">
+        {{ trainerModalLoading ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+      <button type="button" class="btn-secondary" (click)="closeTrainerModal()">Annuler</button>
+    </div>
+  </div>
+</div>

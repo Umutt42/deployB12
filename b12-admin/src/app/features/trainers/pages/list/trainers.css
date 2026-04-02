@@ -1,0 +1,84 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ===================================================
+   TRAINERS — spécifique
+=================================================== */
+
+/* Table min-width */
+.data-table { min-width: 1500px; }
+
+/* Column widths */
+.col-name     { width: 160px; }
+.col-email    { width: 220px; }
+.col-phone    { width: 130px; }
+.col-phyto    { width: 140px; }
+.col-accredit { width: 320px; overflow: hidden; text-overflow: ellipsis; }
+.col-comment  { width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.col-date     { width: 160px; white-space: nowrap; }
+.col-updatedby { width: 160px; }
+.col-actions  { width: 50px; text-align: center; }
+
+/* Action icon button */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #d6dde6;
+  background: #f7fafc;
+  color: #4a7d96;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.btn-icon:hover { background: #eef6ff; border-color: #9ec5fe; }
+
+/* ===================================================
+   PAGINATION
+=================================================== */
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #cfd9e2;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a3b47;
+}
+
+.page-btn:hover:not(:disabled) { background: #f3f7fb; }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+.page-btn.active {
+  background: #4a7d96;
+  color: #fff;
+  border-color: #3c6a80;
+}
+
+.page-ellipsis {
+  padding: 0 4px;
+  color: #6c7a86;
+}

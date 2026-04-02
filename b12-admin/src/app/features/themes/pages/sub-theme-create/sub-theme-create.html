@@ -1,0 +1,189 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            Thématiques \ Détail \ Ajouter sous-thème(s)
+          </div>
+          <h1>Ajouter un ou plusieurs sous-thèmes</h1>
+        </div>
+
+        <div class="head-actions">
+          <div class="import-dropdown">
+            <button class="btn-secondary" type="button" [disabled]="loading">Importer ▾</button>
+            <div class="import-menu">
+              <button type="button" (click)="handleImport('csv')" [disabled]="loading">Importer CSV</button>
+              <button type="button" (click)="handleImport('xlsx')" [disabled]="loading">Importer Excel</button>
+            </div>
+          </div>
+          <input type="file" #importInput style="display:none" (change)="onImportFileSelected($event)" />
+          <a class="btn-secondary" [routerLink]="['/thematics', themeId]">Retour</a>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> sous-thème(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un sous-thème
+            </button>
+          </div>
+
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="batch-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Sous-thème #{{ i + 1 }}</div>
+
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-idle': rowStates[i]?.status === 'idle',
+                      'pill-saving': rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error': rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{
+                      rowStates[i]?.status === 'saving'
+                        ? 'Enregistrement...'
+                        : rowStates[i]?.status === 'success'
+                        ? 'OK'
+                        : rowStates[i]?.status === 'error'
+                        ? 'Erreur'
+                        : 'Prêt'
+                    }}
+                  </span>
+                </div>
+
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer"
+                >
+                  🗑
+                </button>
+              </div>
+
+              <!-- NOM -->
+              <div class="row">
+                <label>Nom *</label>
+
+                <div class="autocomplete">
+                  <input
+                    type="text"
+                    placeholder="Nom du sous-thème..."
+                    formControlName="name"
+                    (input)="onNameChange(i)"
+                    (focus)="onNameFocus(i)"
+                    (blur)="onNameBlur()"
+                    maxlength="160"
+                    autocomplete="off"
+                  />
+
+                  <ul
+                    class="suggestions"
+                    *ngIf="
+                      showNameSuggestions &&
+                      activeRowIndex === i &&
+                      nameSuggestions.length > 0
+                    "
+                  >
+                    <li *ngFor="let s of nameSuggestions">
+                      <button type="button" (click)="pickName(s)">
+                        {{ s }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+                <div
+                  class="field-error"
+                  *ngIf="g.get('name')?.touched && g.get('name')?.invalid"
+                >
+                  Le nom est obligatoire.
+                </div>
+              </div>
+
+              <!-- DESCRIPTION -->
+              <div class="row">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  placeholder="Description..."
+                  formControlName="description"
+                  maxlength="600"
+                ></textarea>
+              </div>
+
+              <!-- HEURES -->
+              <div class="row">
+                <label>Heures</label>
+                <input
+                  type="number"
+                  placeholder="ex: 2"
+                  formControlName="hours"
+                  min="0"
+                  step="0.5"
+                />
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">
+            {{ error }}
+          </div>
+
+          <div class="actions">
+            <button
+              class="btn-primary"
+              type="button"
+              (click)="submitAll('back')"
+              [disabled]="loading"
+            >
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button
+              class="btn-secondary"
+              type="button"
+              (click)="submitAll('stay')"
+              [disabled]="loading"
+            >
+              Enregistrer & continuer
+            </button>
+
+            <a class="btn-secondary" [routerLink]="['/thematics', themeId]">
+              Annuler
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

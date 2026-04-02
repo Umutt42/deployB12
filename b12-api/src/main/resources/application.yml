@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/b12
+    username: b12
+    password: b12
+    
+  jpa:
+    hibernate:
+      ddl-auto: update   # dev: update / prod: validate
+    open-in-view: false
+    defer-datasource-initialization: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always   # permet data.sql pour seed admin
+
+  security:
+    user:
+      name: disabled   # désactive user par défaut de Spring
+      password: disabled
+
+# =========================
+# JWT configuration
+# =========================
+app:
+  jwt:
+    # ⚠️ 32+ caractères minimum pour HS256
+    secret: "CHANGE_ME_TO_A_LONG_RANDOM_SECRET_MIN_32_CHARS"
+    issuer: "b12"
+    accessTokenMinutes: 240

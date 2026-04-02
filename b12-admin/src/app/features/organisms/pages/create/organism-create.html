@@ -1,0 +1,182 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/organisms">Organismes</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter un ou plusieurs organismes</h1>
+        </div>
+        <div class="head-actions">
+          <div class="import-dropdown">
+            <button class="btn-secondary" type="button" [disabled]="loading">Importer ▾</button>
+            <div class="import-menu">
+              <button type="button" (click)="handleImport('csv')" [disabled]="loading">Importer CSV</button>
+              <button type="button" (click)="handleImport('xlsx')" [disabled]="loading">Importer Excel</button>
+            </div>
+          </div>
+          <input type="file" #importInput style="display:none" (change)="onImportFileSelected($event)" />
+          <a class="btn-secondary" routerLink="/organisms">Retour</a>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> organisme(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un organisme
+            </button>
+          </div>
+
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="batch-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Organisme #{{ i + 1 }}</div>
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving': rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error':   rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{ rowStates[i]?.status === 'saving'  ? 'Enregistrement...'
+                      : rowStates[i]?.status === 'success' ? 'OK'
+                      : rowStates[i]?.status === 'error'   ? 'Erreur'
+                      : 'Prêt' }}
+                  </span>
+                </div>
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer"
+                >🗑</button>
+              </div>
+
+              <!-- NOM -->
+              <div class="row">
+                <label>Nom *</label>
+                <div class="autocomplete">
+                  <input
+                    type="text"
+                    formControlName="name"
+                    maxlength="180"
+                    autocomplete="off"
+                    (input)="onNameChange(i)"
+                    (focus)="onNameFocus(i)"
+                    (blur)="onNameBlur()"
+                  />
+                  <ul
+                    class="suggestions"
+                    *ngIf="showNameSuggestions && activeRowIndex === i && nameSuggestions.length > 0"
+                  >
+                    <li *ngFor="let s of nameSuggestions">
+                      <button type="button" (click)="pickName(s)">{{ s }}</button>
+                    </li>
+                  </ul>
+                </div>
+                <div class="field-error" *ngIf="g.get('name')?.touched && g.get('name')?.invalid">
+                  Le nom est obligatoire.
+                </div>
+              </div>
+
+              <!-- ABRÉVIATION -->
+              <div class="row">
+                <label>Abréviation</label>
+                <div class="autocomplete">
+                  <input
+                    type="text"
+                    formControlName="abbreviation"
+                    maxlength="30"
+                    placeholder="Optionnel"
+                    autocomplete="off"
+                    (input)="onAbbreviationChange(i)"
+                    (focus)="onAbbreviationFocus(i)"
+                    (blur)="onAbbreviationBlur()"
+                  />
+                  <ul
+                    class="suggestions"
+                    *ngIf="showAbbreviationSuggestions && activeRowIndex === i && abbreviationSuggestions.length > 0"
+                  >
+                    <li *ngFor="let s of abbreviationSuggestions">
+                      <button type="button" (click)="pickAbbreviation(s)">{{ s }}</button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- SECTEURS -->
+              <div class="row">
+                <label>Secteurs associés</label>
+                <input type="text" class="list-search" placeholder="Rechercher un secteur..."
+                  [(ngModel)]="sectorSearch[i]" [ngModelOptions]="{standalone: true}" />
+                <ul class="multi-list">
+                  <li
+                    *ngFor="let s of filteredSectorsFor(i)"
+                    [class.selected]="items.at(i).get('sectorIds')?.value?.includes(s.id!)"
+                    (dblclick)="toggleMultiItem(s.id!, i, 'sectorIds')"
+                  >{{ s.name }}</li>
+                </ul>
+                <div class="hint">Double-clic pour sélectionner / désélectionner</div>
+              </div>
+
+              <!-- CENTRES PILOTES -->
+              <div class="row">
+                <label>Centres pilotes associés</label>
+                <input type="text" class="list-search" placeholder="Rechercher un centre pilote..."
+                  [(ngModel)]="pilotCenterSearch[i]" [ngModelOptions]="{standalone: true}" />
+                <ul class="multi-list">
+                  <li
+                    *ngFor="let pc of filteredPilotCentersFor(i)"
+                    [class.selected]="items.at(i).get('pilotCenterIds')?.value?.includes(pc.id!)"
+                    (dblclick)="toggleMultiItem(pc.id!, i, 'pilotCenterIds')"
+                  >{{ pc.name }}</li>
+                </ul>
+                <div class="hint">Double-clic pour sélectionner / désélectionner</div>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">{{ error }}</div>
+
+          <div class="actions">
+            <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+            <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+              Enregistrer & continuer
+            </button>
+            <a class="btn-secondary" routerLink="/organisms">Annuler</a>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

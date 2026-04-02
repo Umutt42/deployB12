@@ -1,0 +1,268 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \ Utilisateurs
+          </div>
+          <h1>Gestion des utilisateurs</h1>
+        </div>
+
+        <a class="btn-primary" routerLink="/users/new">
+          Créer utilisateur +
+        </a>
+      </div>
+
+      <div class="table-card">
+
+        <!-- Toolbar -->
+        <div class="table-toolbar">
+          <div class="left">
+            <label>Action :</label>
+
+            <select [(ngModel)]="action">
+              <option value="">---------</option>
+
+              <!-- Actif -->
+              <option value="activate">Activer</option>
+              <option value="deactivate">Désactiver</option>
+
+              <!-- Rôle -->
+              <option value="setRoleAdmin">Définir rôle : ADMIN</option>
+              <option value="setRoleUser">Définir rôle : USER</option>
+              <option value="setRoleVisitor">Définir rôle : VISITOR</option>
+            </select>
+
+            <button
+              class="btn-secondary"
+              type="button"
+              (click)="runAction()"
+              [disabled]="selectedCount() === 0 || loading || !action"
+            >
+              Envoyer
+            </button>
+
+            <span class="muted">
+              {{ selectedCount() }} sélectionné(s)
+            </span>
+            <div class="pagination" *ngIf="totalPages > 1">
+              <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === -1" class="page-ellipsis">…</span>
+                <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls (filters + sort + colonnes) -->
+        <div class="list-controls">
+          <div class="control">
+            <label>Actif</label>
+            <select [(ngModel)]="activeFilter" (ngModelChange)="onFilterChange()">
+              <option value="all">Tout</option>
+              <option value="true">Oui</option>
+              <option value="false">Non</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Rôle</label>
+            <select [(ngModel)]="roleFilter" (ngModelChange)="onFilterChange()">
+              <option value="all">Tous</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="USER">USER</option>
+              <option value="VISITOR">VISITOR</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Recherche</label>
+            <input
+              type="text"
+              placeholder="email..."
+              [(ngModel)]="search"
+              (ngModelChange)="onFilterChange()"
+            />
+          </div>
+
+          <!-- ✅ Tri -->
+          <div class="control">
+            <label>Trier par</label>
+            <div class="sort-inline">
+              <select [(ngModel)]="sortBy">
+                <option value="email">Email</option>
+                <option value="role">Rôle</option>
+                <option value="active">Actif</option>
+              </select>
+
+              <button
+                type="button"
+                class="btn-secondary btn-sort"
+                (click)="sortDir = (sortDir === 'asc' ? 'desc' : 'asc')"
+                [disabled]="loading"
+                [attr.title]="sortDir === 'asc' ? 'Ascendant' : 'Descendant'"
+              >
+                {{ sortDir === 'asc' ? '↑' : '↓' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Colonnes -->
+          <div class="control columns-menu">
+            <label>Colonnes</label>
+
+            <button type="button" class="btn-outline" (click)="toggleColumnsMenu()">
+              {{ columnsButtonLabel }}
+            </button>
+
+            <div class="columns-dropdown" *ngIf="columnsOpen">
+              <label>
+                <input type="checkbox" [checked]="showEmail" (change)="setShowEmail($any($event.target).checked)" />
+                Email
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showRole" (change)="setShowRole($any($event.target).checked)" />
+                Rôle
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showActive" (change)="setShowActive($any($event.target).checked)" />
+                Actif
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showForcePasswordChange" (change)="setShowForcePasswordChange($any($event.target).checked)" />
+                Force MDP
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="check">
+                <input
+                  type="checkbox"
+                  (change)="toggleAll($any($event.target).checked)"
+                />
+              </th>
+              <th *ngIf="showEmail">Email</th>
+              <th *ngIf="showRole" class="center">Rôle</th>
+              <th *ngIf="showActive" class="center">Actif</th>
+              <th *ngIf="showForcePasswordChange" class="center">Force MDP</th>
+              <th class="center">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <!-- Loading -->
+            <tr *ngIf="loading">
+              <td [attr.colspan]="tableColspan()">Chargement...</td>
+            </tr>
+
+            <!-- Error -->
+            <tr *ngIf="!loading && error">
+              <td [attr.colspan]="tableColspan()" class="error">
+                {{ error }}
+              </td>
+            </tr>
+
+            <!-- Empty state -->
+            <tr *ngIf="!loading && !error && filteredItems().length === 0 && !hasActiveFilter"><td [attr.colspan]="tableColspan()" class="muted">Aucun utilisateur.</td></tr>
+            <tr *ngIf="!loading && !error && filteredItems().length === 0 && hasActiveFilter"><td [attr.colspan]="tableColspan()"><div class="empty-state">Aucun résultat<ng-container *ngIf="search"> pour "{{ search }}"</ng-container>.</div></td></tr>
+
+            <!-- Data -->
+            <tr *ngFor="let u of pagedUsers">
+              <td class="check">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(u.id)"
+                  (change)="toggleOne(u.id, $any($event.target).checked)"
+                />
+              </td>
+
+              <td *ngIf="showEmail" class="email-cell">
+                {{ u.email }}
+              </td>
+
+              <td *ngIf="showRole" class="center">
+                <span class="pill">
+                  {{ u.role }}
+                </span>
+              </td>
+
+              <td *ngIf="showActive" class="center">
+                <span
+                  class="badge"
+                  [class.yes]="u.active"
+                  [class.no]="!u.active"
+                >
+                  {{ u.active ? '✔' : '✖' }}
+                </span>
+              </td>
+
+              <td *ngIf="showForcePasswordChange" class="center">
+                <span
+                  class="badge"
+                  [class.yes]="u.forcePasswordChange"
+                  [class.no]="!u.forcePasswordChange"
+                >
+                  {{ u.forcePasswordChange ? '✔' : '✖' }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="center">
+                <div class="actions-cell">
+                  <button
+                    class="btn-mini"
+                    type="button"
+                    (click)="resetPassword(u)"
+                    [disabled]="loading"
+                  >
+                    Reset MDP
+                  </button>
+
+                  <button
+                    class="btn-mini danger"
+                    type="button"
+                    (click)="deleteUser(u)"
+                    [disabled]="loading"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="table-footer">
+          <span class="muted">
+            {{ filteredItems().length }} utilisateur(s)
+            <ng-container *ngIf="totalPages > 1"> — page {{ currentPage }}/{{ totalPages }}</ng-container>
+          </span>
+          <div class="pagination" *ngIf="totalPages > 1">
+            <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === -1" class="page-ellipsis">…</span>
+              <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,385 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb"><a routerLink="/dashboard">Accueil</a> \ Secteurs</div>
+          <h1>Secteurs</h1>
+        </div>
+
+        <a *hasRole="['ADMIN','USER']" class="btn-primary" routerLink="/sectors/new">
+          Ajouter secteur +
+        </a>
+      </div>
+
+      <div class="table-card">
+        <!-- TOOLBAR -->
+        <div class="table-toolbar">
+          <div class="toolbar-right">
+            <a class="btn-stats" routerLink="/sectors/stats">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+                <path d="M2 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-5zm6-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V7zm6-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V4z"/>
+              </svg>
+              Statistiques
+            </a>
+          </div>
+          <div class="left">
+            <label>Action :</label>
+
+            <select [(ngModel)]="action">
+              <option value="">---------</option>
+
+              <ng-container *hasRole="['ADMIN','USER']">
+                <option value="archive">Archiver</option>
+                <option value="unarchive">Désarchiver</option>
+                <option value="duplicate">Dupliquer</option>
+              </ng-container>
+
+              <ng-container *hasRole="['ADMIN']">
+                <option value="delete">Supprimer</option>
+              </ng-container>
+
+              <optgroup label="Exporter tout (actifs)">
+                <option value="export_csv_all">CSV</option>
+                <option value="export_xlsx_all">Excel</option>
+                <option value="export_pdf_all">PDF</option>
+              </optgroup>
+              <optgroup label="Exporter tout (avec archivés)">
+                <option value="export_csv_all_archived">CSV</option>
+                <option value="export_xlsx_all_archived">Excel</option>
+                <option value="export_pdf_all_archived">PDF</option>
+              </optgroup>
+              <optgroup label="Exporter la sélection">
+                <option value="export_csv_selected">CSV</option>
+                <option value="export_xlsx_selected">Excel</option>
+                <option value="export_pdf_selected">PDF</option>
+              </optgroup>
+            </select>
+
+            <button class="btn-secondary" type="button" (click)="runAction()" [disabled]="isSendDisabled()">
+              Envoyer
+            </button>
+
+            <span class="muted">{{ selectedCount() }} sélectionné(s)</span>
+            <div class="pagination" *ngIf="totalPages > 1">
+              <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === -1" class="page-ellipsis">…</span>
+                <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="list-controls">
+          <div class="control">
+            <label>Recherche</label>
+            <input
+              type="text"
+              placeholder="Nom, description, centres pilotes, organismes, agréments..."
+              [value]="search"
+              (input)="onSearchChange($any($event.target).value)"
+            />
+          </div>
+
+          <div class="control">
+            <label>Centre pilote</label>
+            <select [(ngModel)]="filterPilotCenterId" (ngModelChange)="setFilterPilotCenterId($event)">
+              <option [ngValue]="null">Tous</option>
+              <option *ngFor="let p of availablePilotCenters" [ngValue]="p.id">{{ p.name }}</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Organisme</label>
+            <select [(ngModel)]="filterOrganismId" (ngModelChange)="setFilterOrganismId($event)">
+              <option [ngValue]="null">Tous</option>
+              <option *ngFor="let o of availableOrganisms" [ngValue]="o.id">{{ o.name }}</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Agrément centre</label>
+            <select [(ngModel)]="filterAccreditationId" (ngModelChange)="setFilterAccreditationId($event)">
+              <option [ngValue]="null">Tous</option>
+              <option *ngFor="let a of availableAccreditations" [ngValue]="a.id">{{ a.label }}</option>
+            </select>
+          </div>
+
+          <div class="control columns-menu">
+            <label>Colonnes</label>
+
+            <button type="button" class="btn-outline" (click)="toggleColumnsMenu()">
+              {{ columnsButtonLabel }}
+            </button>
+
+            <div class="columns-dropdown" *ngIf="columnsOpen">
+              <label>
+                <input type="checkbox" [checked]="showName" (change)="setShowName($any($event.target).checked)" />
+                Nom
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showDescription" (change)="setShowDescription($any($event.target).checked)" />
+                Description
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showPilotCenters" (change)="setShowPilotCenters($any($event.target).checked)" />
+                Centres pilotes
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showOrganisms" (change)="setShowOrganisms($any($event.target).checked)" />
+                Organismes
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showCenterAccreditations" (change)="setShowCenterAccreditations($any($event.target).checked)" />
+                Agréments centres
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showCreatedAt" (change)="setShowCreatedAt($any($event.target).checked)" />
+                Créé le
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showUpdatedAt" (change)="setShowUpdatedAt($any($event.target).checked)" />
+                Modifié le
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showUpdatedBy" (change)="setShowUpdatedBy($any($event.target).checked)" />
+                Modifié par
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-wrapper" scrollMirror>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input type="checkbox" (change)="toggleAll($any($event.target).checked)" />
+                </th>
+
+                <th *ngIf="showName" class="sortable col-name sticky-name" (click)="setSort('name')">
+                  Nom
+                  <span class="sort-indicator" *ngIf="sortKey === 'name'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showDescription" class="sortable col-desc" (click)="setSort('description')">
+                  Description
+                  <span class="sort-indicator" *ngIf="sortKey === 'description'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showPilotCenters" class="sortable col-pilotcenters" (click)="setSort('pilotCenters')">
+                  Centres pilotes
+                  <span class="sort-indicator" *ngIf="sortKey === 'pilotCenters'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showOrganisms" class="sortable col-organisms" (click)="setSort('organisms')">
+                  Organismes
+                  <span class="sort-indicator" *ngIf="sortKey === 'organisms'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showCenterAccreditations" class="sortable col-accred" (click)="setSort('centerAccreditations')">
+                  Agréments centres
+                  <span class="sort-indicator" *ngIf="sortKey === 'centerAccreditations'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showCreatedAt" class="sortable col-created" (click)="setSort('createdAt')">
+                  Créé le
+                  <span class="sort-indicator" *ngIf="sortKey === 'createdAt'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showUpdatedAt" class="sortable col-updated" (click)="setSort('updatedAt')">
+                  Modifié le
+                  <span class="sort-indicator" *ngIf="sortKey === 'updatedAt'">
+                    {{ sortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th *ngIf="showUpdatedBy" class="col-updatedby">Modifié par</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <ng-container *hasRole="['ADMIN','USER']">
+                <tr *ngIf="loading">
+                  <td [attr.colspan]="tableColspan()">Chargement...</td>
+                </tr>
+                <tr *ngIf="!loading && error">
+                  <td [attr.colspan]="tableColspan()">{{ error }}</td>
+                </tr>
+              </ng-container>
+
+              <ng-container *hasRole="['VISITOR']">
+                <tr *ngIf="loading">
+                  <td [attr.colspan]="tableColspan() - 1">Chargement...</td>
+                </tr>
+                <tr *ngIf="!loading && error">
+                  <td [attr.colspan]="tableColspan() - 1">{{ error }}</td>
+                </tr>
+              </ng-container>
+
+              <tr *ngIf="!loading && !error && items.length === 0 && !hasActiveFilter"><td [attr.colspan]="tableColspan()" class="muted">Aucun secteur.</td></tr>
+              <tr *ngIf="!loading && !error && items.length === 0 && hasActiveFilter"><td [attr.colspan]="tableColspan()"><div class="empty-state">Aucun résultat<ng-container *ngIf="search"> pour "{{ search }}"</ng-container>.</div></td></tr>
+
+              <tr *ngFor="let s of pagedItems" [class.row-archiving]="archivingIds.has(s.id!)">
+                <td class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(s.id!)"
+                    (change)="toggleOne(s.id!, $any($event.target).checked)"
+                  />
+                </td>
+
+                <td *ngIf="showName" class="col-name sticky-name" [title]="s.name">
+                  <a class="link" [routerLink]="['/sectors', s.id]">
+                    {{ s.name | uppercase }}
+                  </a>
+                </td>
+
+                <td *ngIf="showDescription" class="col-desc" [title]="s.description || '-'">
+                  <div class="cell-clamp desc">
+                    {{ s.description || '-' }}
+                  </div>
+                </td>
+
+                <td *ngIf="showPilotCenters" class="col-pilotcenters">
+                  <div class="cell-clamp rel" [title]="formatPilotCenters(s.pilotCenterIds, 999)">
+                    {{ formatPilotCenters(s.pilotCenterIds) }}
+                  </div>
+                </td>
+
+                <td *ngIf="showOrganisms" class="col-organisms">
+                  <div class="cell-clamp rel" [title]="formatOrganisms(s.organismIds, 999)">
+                    {{ formatOrganisms(s.organismIds) }}
+                  </div>
+                </td>
+
+                <td *ngIf="showCenterAccreditations" class="col-accred">
+                  <div class="cell-clamp rel" [title]="formatAccreditations(s.id, 999)">
+                    {{ formatAccreditations(s.id) }}
+                  </div>
+                </td>
+
+                <td *ngIf="showCreatedAt" class="col-created" [title]="formatDate(s.createdAt)">
+                  {{ formatDate(s.createdAt) }}
+                </td>
+
+                <td *ngIf="showUpdatedAt" class="col-updated" [title]="formatDate(s.updatedAt)">
+                  {{ formatDate(s.updatedAt) }}
+                </td>
+
+                <td *ngIf="showUpdatedBy" class="col-updatedby" [title]="s.updatedBy || '-'">
+                  {{ s.updatedBy || '-' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span class="muted">
+            {{ items.length }} secteur(s) actif(s)
+            <ng-container *ngIf="totalPages > 1"> — page {{ currentPage }}/{{ totalPages }}</ng-container>
+          </span>
+
+          <div class="pagination" *ngIf="totalPages > 1">
+            <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === -1" class="page-ellipsis">…</span>
+              <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+
+            <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE ARCHIVE -->
+      <div class="table-card" *ngIf="archivedItems.length > 0">
+        <div class="archive-section-header">
+          <h2>Archives ({{ archivedItems.length }})</h2>
+        </div>
+
+        <div class="table-wrapper" scrollMirror>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input type="checkbox" (change)="toggleAll($any($event.target).checked)" />
+                </th>
+                <th *ngIf="showName" class="col-name sticky-name">Nom</th>
+                <th *ngIf="showDescription" class="col-desc">Description</th>
+                <th *ngIf="showPilotCenters" class="col-pilotcenters">Centres pilotes</th>
+                <th *ngIf="showOrganisms" class="col-organisms">Organismes</th>
+                <th *ngIf="showCenterAccreditations" class="col-accred">Agréments centres</th>
+                <th *ngIf="showCreatedAt" class="col-created">Créé le</th>
+                <th *ngIf="showUpdatedAt" class="col-updated">Modifié le</th>
+                <th *ngIf="showUpdatedBy" class="col-updatedby">Modifié par</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of archivedItems" [class.row-archiving]="archivingIds.has(s.id!)">
+                <td class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(s.id!)"
+                    (change)="toggleOne(s.id!, $any($event.target).checked)"
+                  />
+                </td>
+                <td *ngIf="showName" class="col-name sticky-name" [title]="s.name">
+                  <a class="link" [routerLink]="['/sectors', s.id]">{{ s.name }}</a>
+                </td>
+                <td *ngIf="showDescription" class="col-desc" [title]="s.description || '-'">
+                  <div class="cell-clamp desc">{{ s.description || '-' }}</div>
+                </td>
+                <td *ngIf="showPilotCenters" class="col-pilotcenters">
+                  <div class="cell-clamp rel" [title]="formatPilotCenters(s.pilotCenterIds, 999)">{{ formatPilotCenters(s.pilotCenterIds) }}</div>
+                </td>
+                <td *ngIf="showOrganisms" class="col-organisms">
+                  <div class="cell-clamp rel" [title]="formatOrganisms(s.organismIds, 999)">{{ formatOrganisms(s.organismIds) }}</div>
+                </td>
+                <td *ngIf="showCenterAccreditations" class="col-accred">
+                  <div class="cell-clamp rel" [title]="formatAccreditations(s.id, 999)">{{ formatAccreditations(s.id) }}</div>
+                </td>
+                <td *ngIf="showCreatedAt" class="col-created" [title]="formatDate(s.createdAt)">{{ formatDate(s.createdAt) }}</td>
+                <td *ngIf="showUpdatedAt" class="col-updated" [title]="formatDate(s.updatedAt)">{{ formatDate(s.updatedAt) }}</td>
+                <td *ngIf="showUpdatedBy" class="col-updatedby" [title]="s.updatedBy || '-'">{{ s.updatedBy || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer muted">
+          {{ archivedItems.length }} secteur(s) archivé(s)
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

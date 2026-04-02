@@ -1,0 +1,232 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+
+      <!-- ── En-tête ─────────────────────────────────────────────────── -->
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \ Importation de données
+          </div>
+          <h1>Importation de données</h1>
+          <p class="page-desc">
+            Importez vos données historiques via des fichiers Excel ou CSV.
+            Suivez les étapes dans l'ordre — chaque entité dépend des précédentes.
+          </p>
+        </div>
+      </div>
+
+      <!-- ── Stepper ──────────────────────────────────────────────────── -->
+      <div class="stepper">
+        <div
+          *ngFor="let s of steps; let i = index"
+          class="step"
+          [class.step-active]="i === currentStep"
+          [class.step-done]="i < currentStep"
+          (click)="goToStep(i)"
+        >
+          <div class="step-circle">
+            <span *ngIf="i >= currentStep">{{ i + 1 }}</span>
+            <svg *ngIf="i < currentStep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="step-label">{{ s.label }}</div>
+          <div class="step-connector" *ngIf="i < steps.length - 1"></div>
+        </div>
+      </div>
+
+      <!-- ── Carte étape courante ──────────────────────────────────────── -->
+      <div class="import-card">
+
+        <!-- En-tête étape -->
+        <div class="card-header">
+          <div>
+            <div class="step-num">Étape {{ currentStep + 1 }} / {{ steps.length }}</div>
+            <h2>{{ step.label }}</h2>
+            <p class="step-desc">{{ step.description }}</p>
+          </div>
+          <button class="btn-template" (click)="downloadTemplate()" [disabled]="downloading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+            </svg>
+            {{ downloading ? 'Téléchargement...' : 'Télécharger le template' }}
+          </button>
+        </div>
+
+        <!-- Info feuilles Excel -->
+        <div class="sheet-info" [class.sheet-multi]="step.multiSheet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;flex-shrink:0">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
+          </svg>
+          <span>{{ step.sheetInfo }}</span>
+          <span *ngIf="step.multiSheet" class="badge-multi">Multi-feuilles Excel uniquement</span>
+        </div>
+
+        <!-- Zone upload ─────────────────────────────────────────────── -->
+        <div
+          class="drop-zone"
+          [class.drop-zone-active]="selectedFile"
+          (dragover)="onDragOver($event)"
+          (drop)="onFileDrop($event)"
+          (click)="fileInput.click()"
+        >
+          <input #fileInput type="file" accept=".xlsx,.xls,.csv" style="display:none" (change)="onFileSelected($event)">
+
+          <ng-container *ngIf="!selectedFile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
+            </svg>
+            <p class="drop-text">Glissez votre fichier ici ou <strong>cliquez pour parcourir</strong></p>
+            <p class="drop-hint">Formats acceptés : .xlsx, .xls, .csv</p>
+          </ng-container>
+
+          <ng-container *ngIf="selectedFile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="file-icon">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+            </svg>
+            <p class="file-name">{{ selectedFile.name }}</p>
+            <p class="file-size">{{ (selectedFile.size / 1024).toFixed(1) }} Ko</p>
+          </ng-container>
+        </div>
+
+        <!-- Erreur affichage -->
+        <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+        <!-- Bouton prévisualisation -->
+        <div class="actions-row" *ngIf="selectedFile && !previewResult && !importResult">
+          <button class="btn-preview" (click)="preview()" [disabled]="loading">
+            <svg *ngIf="!loading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
+            <span *ngIf="loading" class="spinner"></span>
+            {{ loading ? 'Analyse en cours...' : 'Prévisualiser' }}
+          </button>
+        </div>
+
+        <!-- ── Résultat Prévisualisation ─────────────────────────────── -->
+        <ng-container *ngIf="previewResult">
+          <div class="preview-summary">
+            <div class="summary-badge badge-total">
+              <span class="badge-num">{{ previewResult.total }}</span>
+              <span class="badge-lbl">ligne(s) détectée(s)</span>
+            </div>
+            <div class="summary-badge badge-valid">
+              <span class="badge-num">{{ previewResult.valid }}</span>
+              <span class="badge-lbl">valide(s)</span>
+            </div>
+            <div class="summary-badge" [class.badge-error]="previewResult.withErrors > 0" [class.badge-ok]="previewResult.withErrors === 0">
+              <span class="badge-num">{{ previewResult.withErrors }}</span>
+              <span class="badge-lbl">erreur(s)</span>
+            </div>
+          </div>
+
+          <!-- Liste des erreurs -->
+          <div *ngIf="previewResult.errors.length > 0" class="errors-panel">
+            <div class="errors-title">Erreurs détectées (lignes avec erreurs seront ignorées)</div>
+            <div class="error-row" *ngFor="let row of errorsByRow(previewResult.errors); trackBy: trackByRow">
+              <span class="error-row-num">Ligne {{ row.row }}</span>
+              <ul class="error-messages">
+                <li *ngFor="let msg of row.messages">{{ msg }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div *ngIf="previewResult.errors.length === 0" class="no-errors">
+            Aucune erreur détectée — toutes les lignes sont valides.
+          </div>
+
+          <div class="actions-row">
+            <button class="btn-cancel" (click)="resetState(); selectedFile = null">
+              Annuler
+            </button>
+            <button
+              class="btn-confirm"
+              (click)="confirmImport()"
+              [disabled]="importing || previewResult.valid === 0"
+            >
+              <span *ngIf="importing" class="spinner"></span>
+              {{ importing ? 'Import en cours...' : 'Confirmer l\'import (' + previewResult.valid + ' ligne(s))' }}
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- ── Résultat Import ────────────────────────────────────────── -->
+        <ng-container *ngIf="importResult">
+          <div class="import-result" [class.result-ok]="importResult.errors.length === 0" [class.result-warn]="importResult.errors.length > 0">
+            <div class="result-icon">
+              <svg *ngIf="importResult.errors.length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+              </svg>
+              <svg *ngIf="importResult.errors.length > 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+              </svg>
+            </div>
+            <div class="result-stats">
+              <div class="stat">
+                <span class="stat-num">{{ importResult.total }}</span>
+                <span class="stat-lbl">traité(s)</span>
+              </div>
+              <div class="stat stat-created">
+                <span class="stat-num">{{ importResult.created }}</span>
+                <span class="stat-lbl">créé(s)</span>
+              </div>
+              <div class="stat stat-skipped">
+                <span class="stat-num">{{ importResult.skipped }}</span>
+                <span class="stat-lbl">ignoré(s) (doublons)</span>
+              </div>
+              <div class="stat stat-errors" *ngIf="importResult.errors.length > 0">
+                <span class="stat-num">{{ importResult.errors.length }}</span>
+                <span class="stat-lbl">erreur(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Erreurs post-import -->
+          <div *ngIf="importResult.errors.length > 0" class="errors-panel">
+            <div class="errors-title">Lignes en erreur (non importées)</div>
+            <div class="error-row" *ngFor="let row of errorsByRow(importResult.errors); trackBy: trackByRow">
+              <span class="error-row-num">Ligne {{ row.row }}</span>
+              <ul class="error-messages">
+                <li *ngFor="let msg of row.messages">{{ msg }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn-cancel" (click)="resetState(); selectedFile = null">
+              Nouvel import
+            </button>
+            <button class="btn-next" *ngIf="currentStep < steps.length - 1" (click)="nextStep()">
+              Étape suivante →
+            </button>
+          </div>
+        </ng-container>
+
+      </div>
+
+      <!-- ── Navigation bas ───────────────────────────────────────────── -->
+      <div class="nav-row">
+        <button class="btn-nav" (click)="prevStep()" [disabled]="currentStep === 0">
+          ← Étape précédente
+        </button>
+        <span class="nav-hint">
+          Respectez l'ordre des étapes — chaque entité dépend des précédentes.
+        </span>
+        <button class="btn-nav btn-nav-next" (click)="nextStep()" [disabled]="currentStep === steps.length - 1">
+          Étape suivante →
+        </button>
+      </div>
+
+    </main>
+  </div>
+</div>

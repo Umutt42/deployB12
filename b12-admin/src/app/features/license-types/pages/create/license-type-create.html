@@ -1,0 +1,188 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/license-types">Types de phytolicences</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter un ou plusieurs types de phytolicence</h1>
+        </div>
+
+        <div class="head-actions">
+          <div class="import-dropdown">
+            <button class="btn-secondary" type="button" [disabled]="loading">Importer ▾</button>
+            <div class="import-menu">
+              <button type="button" (click)="handleImport('csv')" [disabled]="loading">Importer CSV</button>
+              <button type="button" (click)="handleImport('xlsx')" [disabled]="loading">Importer Excel</button>
+            </div>
+          </div>
+          <input type="file" #importInput style="display:none" (change)="onImportFileSelected($event)" />
+          <a class="btn-secondary" routerLink="/license-types">Retour</a>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> type(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un type
+            </button>
+          </div>
+
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="batch-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Type #{{ i + 1 }}</div>
+
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving': rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error': rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{
+                      rowStates[i]?.status === 'saving'
+                        ? 'Enregistrement...'
+                        : rowStates[i]?.status === 'success'
+                        ? 'OK'
+                        : rowStates[i]?.status === 'error'
+                        ? 'Erreur'
+                        : 'Prêt'
+                    }}
+                  </span>
+                </div>
+
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer"
+                >
+                  🗑
+                </button>
+              </div>
+
+              <!-- CODE -->
+              <div class="row">
+                <label>Code *</label>
+
+                <div class="autocomplete">
+                  <input
+                    type="text"
+                    placeholder="NP, P1, P2..."
+                    formControlName="code"
+                    (input)="onCodeChange(i)"
+                    (focus)="onCodeFocus(i)"
+                    (blur)="onCodeBlur()"
+                    maxlength="20"
+                    autocomplete="off"
+                  />
+
+                  <ul
+                    class="suggestions"
+                    *ngIf="
+                      showCodeSuggestions &&
+                      activeRowIndex === i &&
+                      codeSuggestions.length > 0
+                    "
+                  >
+                    <li *ngFor="let s of codeSuggestions">
+                      <button type="button" (click)="pickCode(s)">
+                        {{ s }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="field-error" *ngIf="g.get('code')?.touched && g.get('code')?.invalid">
+                  Le code est obligatoire.
+                </div>
+              </div>
+
+              <!-- LABEL -->
+              <div class="row">
+                <label>Label *</label>
+                <input
+                  type="text"
+                  placeholder="NP, Assistant usage professionnel..."
+                  formControlName="label"
+                  maxlength="120"
+                />
+
+                <div class="field-error" *ngIf="g.get('label')?.touched && g.get('label')?.invalid">
+                  Le label est obligatoire.
+                </div>
+              </div>
+
+              <!-- DESCRIPTION -->
+              <div class="row">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  placeholder="Distribution / Conseil - Produits non professionnels..."
+                  formControlName="description"
+                  maxlength="500"
+                ></textarea>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">
+            {{ error }}
+          </div>
+
+          <div class="actions">
+            <button
+              class="btn-primary"
+              type="button"
+              (click)="submitAll('back')"
+              [disabled]="loading"
+            >
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button
+              class="btn-secondary"
+              type="button"
+              (click)="submitAll('stay')"
+              [disabled]="loading"
+            >
+              Enregistrer & continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/license-types">
+              Annuler
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

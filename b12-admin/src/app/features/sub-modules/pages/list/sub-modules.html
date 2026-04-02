@@ -1,0 +1,326 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb"><a routerLink="/dashboard">Accueil</a> \ Sous-modules</div>
+          <h1>Sous-modules</h1>
+        </div>
+        <div class="head-actions">
+          <a class="btn-stats" routerLink="/sub-modules/stats">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+            </svg>
+            Statistiques
+          </a>
+          <a *hasRole="['ADMIN','USER']" class="btn-primary" routerLink="/sub-modules/new">
+            Ajouter un sous-module +
+          </a>
+        </div>
+      </div>
+
+      <!-- YEAR TABS -->
+      <div class="year-tabs" *ngIf="availableYears.length > 0">
+        <button
+          *ngFor="let y of availableYears"
+          class="year-tab"
+          [class.active]="selectedYear === y"
+          (click)="setYear(selectedYear === y ? null : y)"
+        >{{ y }}</button>
+      </div>
+
+      <div class="table-card">
+        <!-- TOOLBAR -->
+        <div class="table-toolbar">
+          <div class="left">
+            <label>Action :</label>
+            <select [(ngModel)]="action">
+              <option value="">---------</option>
+
+              <ng-container *hasRole="['ADMIN','USER']">
+                <option value="archive">Archiver</option>
+                <option value="unarchive">Désarchiver</option>
+              </ng-container>
+
+              <ng-container *hasRole="['ADMIN']">
+                <option value="delete">Supprimer</option>
+              </ng-container>
+
+              <optgroup label="Exporter tout (actifs)">
+                <option value="export_csv_all">CSV</option>
+                <option value="export_xlsx_all">Excel</option>
+                <option value="export_pdf_all">PDF</option>
+              </optgroup>
+              <optgroup label="Exporter tout (avec archivés)">
+                <option value="export_csv_all_archived">CSV</option>
+                <option value="export_xlsx_all_archived">Excel</option>
+                <option value="export_pdf_all_archived">PDF</option>
+              </optgroup>
+              <optgroup label="Exporter la sélection">
+                <option value="export_csv_selected">CSV</option>
+                <option value="export_xlsx_selected">Excel</option>
+                <option value="export_pdf_selected">PDF</option>
+              </optgroup>
+            </select>
+            <button class="btn-secondary" type="button" (click)="runAction()" [disabled]="isSendDisabled()">Envoyer</button>
+            <span class="muted">{{ selectedCount() }} sélectionné(s)</span>
+            <div class="pagination" *ngIf="totalPages > 1">
+              <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === -1" class="page-ellipsis">…</span>
+                <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTRES + COLONNES -->
+        <div class="list-controls">
+          <div class="control">
+            <label>Recherche</label>
+            <input type="text" placeholder="Titre, agrément centre, n° agrément..."
+              [value]="search" (input)="onSearchChange($any($event.target).value)" />
+          </div>
+          <div class="control">
+            <label>Statut</label>
+            <select [value]="filterStatus" (change)="setFilterStatus($any($event.target).value)">
+              <option value="">Tous</option>
+              <option value="RECEIVED">Reçu</option>
+              <option value="ACCEPTED">Accepté</option>
+              <option value="REFUSED">Refusé</option>
+              <option value="PENDING">En attente</option>
+            </select>
+          </div>
+          <div class="control">
+            <label>Type de formation</label>
+            <select [value]="filterTrainingType" (change)="setFilterTrainingType($any($event.target).value)">
+              <option value="">Tous</option>
+              <option value="initial">Initiale</option>
+              <option value="continuous">Continue</option>
+            </select>
+          </div>
+          <div class="control">
+            <label>Subventionné</label>
+            <select [value]="filterSubsidized" (change)="setFilterSubsidized($any($event.target).value)">
+              <option value="">Tous</option>
+              <option value="true">Oui</option>
+              <option value="false">Non</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>Expiration</label>
+            <select [value]="filterExpiration" (change)="setFilterExpiration($any($event.target).value)">
+              <option value="">Toutes</option>
+              <option value="gt_120">Fin dans + 120 jours</option>
+              <option value="between_60_120">Entre 60 et 120 jours</option>
+              <option value="lte_60">Moins de 60 jours</option>
+              <option value="no_date">Sans date de fin</option>
+            </select>
+          </div>
+
+          <div class="control columns-menu">
+            <label>Colonnes</label>
+            <button type="button" class="btn-outline" (click)="toggleColumnsMenu($event)">{{ columnsButtonLabel }}</button>
+            <div class="columns-dropdown" *ngIf="columnsOpen" [ngStyle]="dropdownStyle">
+              <label><input type="checkbox" [checked]="showCenterAccreditation" (change)="setShow('showCenterAccreditation', $any($event.target).checked)" /> Agrément centre</label>
+              <label><input type="checkbox" [checked]="showPartners" (change)="setShow('showPartners', $any($event.target).checked)" /> Organismes partenaires</label>
+              <label><input type="checkbox" [checked]="showTitle" (change)="setShow('showTitle', $any($event.target).checked)" /> Titre</label>
+              <label><input type="checkbox" [checked]="showLicenseTypes" (change)="setShow('showLicenseTypes', $any($event.target).checked)" /> Types de phytolicences</label>
+              <label><input type="checkbox" [checked]="showThemes" (change)="setShow('showThemes', $any($event.target).checked)" /> Thématiques / Sous-thèmes</label>
+              <label><input type="checkbox" [checked]="showDurationHours" (change)="setShow('showDurationHours', $any($event.target).checked)" /> Durée (h)</label>
+              <label><input type="checkbox" [checked]="showPrice" (change)="setShow('showPrice', $any($event.target).checked)" /> Prix (€)</label>
+              <label><input type="checkbox" [checked]="showTrainers" (change)="setShow('showTrainers', $any($event.target).checked)" /> Formateur·trices</label>
+              <label><input type="checkbox" [checked]="showTrainingType" (change)="setShow('showTrainingType', $any($event.target).checked)" /> Type de formation</label>
+              <label><input type="checkbox" [checked]="showReceivedDate" (change)="setShow('showReceivedDate', $any($event.target).checked)" /> Date de réception</label>
+              <label><input type="checkbox" [checked]="showRequestStatus" (change)="setShow('showRequestStatus', $any($event.target).checked)" /> Statut</label>
+              <label><input type="checkbox" [checked]="showAccreditationNumber" (change)="setShow('showAccreditationNumber', $any($event.target).checked)" /> N° agrément</label>
+              <label><input type="checkbox" [checked]="showTrainingPoints" (change)="setShow('showTrainingPoints', $any($event.target).checked)" /> Points de formation</label>
+              <label><input type="checkbox" [checked]="showStartDate" (change)="setShow('showStartDate', $any($event.target).checked)" /> Date de début</label>
+              <label><input type="checkbox" [checked]="showEndDate" (change)="setShow('showEndDate', $any($event.target).checked)" /> Date de fin</label>
+              <label><input type="checkbox" [checked]="showSubsidized" (change)="setShow('showSubsidized', $any($event.target).checked)" /> Subventionné</label>
+              <label><input type="checkbox" [checked]="showComment" (change)="setShow('showComment', $any($event.target).checked)" /> Commentaire</label>
+              <label><input type="checkbox" [checked]="showSectors" (change)="setShow('showSectors', $any($event.target).checked)" /> Secteurs</label>
+              <label><input type="checkbox" [checked]="showPilotCenters" (change)="setShow('showPilotCenters', $any($event.target).checked)" /> Centres pilotes</label>
+              <label><input type="checkbox" [checked]="showPublicCible" (change)="setShow('showPublicCible', $any($event.target).checked)" /> Public cible</label>
+              <label><input type="checkbox" [checked]="showCreatedAt" (change)="setShow('showCreatedAt', $any($event.target).checked)" /> Créé le</label>
+              <label><input type="checkbox" [checked]="showUpdatedAt" (change)="setShow('showUpdatedAt', $any($event.target).checked)" /> Modifié le</label>
+              <label><input type="checkbox" [checked]="showUpdatedBy" (change)="setShow('showUpdatedBy', $any($event.target).checked)" /> Modifié par</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLE ACTIVE -->
+        <div class="table-wrapper" scrollMirror>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="check sticky-check"><input type="checkbox" (change)="toggleAll($any($event.target).checked)" /></th>
+                <th *ngIf="showCenterAccreditation" class="sortable col-centeraccreditation" (click)="setSort('centerAccreditation')">Agrément centre <span *ngIf="sortKey==='centerAccreditation'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showTitle" class="sortable col-title sticky-name" (click)="setSort('title')">Titre <span *ngIf="sortKey==='title'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showReceivedDate" class="sortable col-receiveddate" (click)="setSort('receivedDate')">Date réception <span *ngIf="sortKey==='receivedDate'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showRequestStatus" class="sortable col-status" (click)="setSort('requestStatus')">Statut <span *ngIf="sortKey==='requestStatus'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showStartDate" class="sortable col-startdate" (click)="setSort('startDate')">Début <span *ngIf="sortKey==='startDate'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showEndDate" class="sortable col-enddate" (click)="setSort('endDate')">Fin <span *ngIf="sortKey==='endDate'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showThemes" class="sortable col-themes" (click)="setSort('themes')">Thématiques / Sous-thèmes <span *ngIf="sortKey==='themes'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showLicenseTypes" class="sortable col-licensetypes" (click)="setSort('licenseTypes')">Types phytolicences <span *ngIf="sortKey==='licenseTypes'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showPartners" class="sortable col-partners" (click)="setSort('partners')">Organismes partenaires <span *ngIf="sortKey==='partners'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showDurationHours" class="sortable center col-durationhours" (click)="setSort('durationHours')">Durée (h) <span *ngIf="sortKey==='durationHours'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showTrainers" class="sortable col-trainers" (click)="setSort('trainers')">Formateur·trices <span *ngIf="sortKey==='trainers'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showTrainingType" class="sortable col-bool" (click)="setSort('trainingType')">Type de formation <span *ngIf="sortKey==='trainingType'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showAccreditationNumber" class="sortable col-accreditnumber" (click)="setSort('accreditationNumber')">N° agrément <span *ngIf="sortKey==='accreditationNumber'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showTrainingPoints" class="sortable center col-trainingpoints" (click)="setSort('trainingPoints')">Points <span *ngIf="sortKey==='trainingPoints'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showSubsidized" class="sortable center col-bool" (click)="setSort('subsidized')">Subventionné <span *ngIf="sortKey==='subsidized'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showComment" class="sortable col-comment" (click)="setSort('comment')">Commentaire <span *ngIf="sortKey==='comment'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showPilotCenters" class="sortable col-pilotcenters" (click)="setSort('pilotCenters')">Centres pilotes <span *ngIf="sortKey==='pilotCenters'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showSectors" class="sortable col-sectors" (click)="setSort('sectors')">Secteurs <span *ngIf="sortKey==='sectors'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showPrice" class="sortable center col-price" (click)="setSort('price')">Prix (€) <span *ngIf="sortKey==='price'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showPublicCible" class="sortable col-comment" (click)="setSort('publicCible')">Public cible <span *ngIf="sortKey==='publicCible'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showCreatedAt" class="sortable col-created" (click)="setSort('createdAt')">Créé le <span *ngIf="sortKey==='createdAt'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showUpdatedAt" class="sortable col-updated" (click)="setSort('updatedAt')">Modifié le <span *ngIf="sortKey==='updatedAt'">{{ sortDir==='asc'?'▲':'▼' }}</span></th>
+                <th *ngIf="showUpdatedBy" class="col-updatedby">Modifié par</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="loading"><td [attr.colspan]="tableColspan()" class="muted">Chargement...</td></tr>
+              <tr *ngIf="!loading && error"><td [attr.colspan]="tableColspan()">{{ error }}</td></tr>
+              <tr *ngIf="!loading && !error && items.length === 0 && !hasActiveFilter"><td [attr.colspan]="tableColspan()" class="muted">Aucun sous-module.</td></tr>
+              <tr *ngIf="!loading && !error && items.length === 0 && hasActiveFilter"><td [attr.colspan]="tableColspan()"><div class="empty-state">Aucun résultat<ng-container *ngIf="search"> pour "{{ search }}"</ng-container>.</div></td></tr>
+
+              <tr *ngFor="let x of pagedItems" [class.row-archiving]="archivingIds.has(x.id!)">
+                <td class="check sticky-check">
+                  <input type="checkbox" [checked]="isSelected(x.id!)" (change)="toggleOne(x.id!, $any($event.target).checked)" />
+                </td>
+                <td *ngIf="showCenterAccreditation" class="col-centeraccreditation" [title]="x.centerAccreditationLabel || '-'">
+                  <a class="link" [routerLink]="['/center-accreditations', x.centerAccreditationId]">{{ x.centerAccreditationLabel || '-' }}</a>
+                </td>
+                <td *ngIf="showTitle" class="col-title sticky-name" [title]="x.title || '-'">
+                  <a class="link" [routerLink]="['/sub-modules', x.id]">{{ x.title || '-' }}</a>
+                </td>
+                <td *ngIf="showReceivedDate" class="col-receiveddate" [title]="formatLocalDate(x.receivedDate)">{{ formatLocalDate(x.receivedDate) }}</td>
+                <td *ngIf="showRequestStatus" class="col-status" [title]="formatRequestStatus(x.requestStatus)">
+                  <span class="status-pill status-{{ (x.requestStatus || 'unknown').toLowerCase() }}"><span class="status-dot"></span>{{ formatRequestStatus(x.requestStatus) }}</span>
+                </td>
+                <td *ngIf="showStartDate" class="col-startdate" [title]="formatLocalDate(x.startDate)">{{ formatLocalDate(x.startDate) }}</td>
+                <td *ngIf="showEndDate" class="col-enddate" [ngClass]="endDateClass(x.endDate)" [title]="formatLocalDate(x.endDate)">{{ formatLocalDate(x.endDate) }}</td>
+                <td *ngIf="showThemes" class="col-themes col-rel" [title]="formatSet(x.themeLabels, 999)">
+                  <span class="theme-names">{{ formatSet(x.themeLabels) }}</span>
+                  <ng-container *ngIf="(x.subThemeLabels?.length ?? 0) > 0"><br/><span class="subtheme-names">{{ formatSet(x.subThemeLabels) }}</span></ng-container>
+                </td>
+                <td *ngIf="showLicenseTypes" class="col-licensetypes col-rel" [title]="formatSet(x.licenseTypeLabels, 999)">{{ formatSet(x.licenseTypeLabels) }}</td>
+                <td *ngIf="showPartners" class="col-partners col-rel" [title]="formatSet(x.partnerAccreditationLabels, 999)">{{ formatSet(x.partnerAccreditationLabels) }}</td>
+                <td *ngIf="showDurationHours" class="center col-durationhours" [title]="x.durationHours != null ? x.durationHours + ' h' : '-'">{{ x.durationHours != null ? x.durationHours + ' h' : '-' }}</td>
+                <td *ngIf="showTrainers" class="col-trainers col-rel" [title]="formatSet(x.trainerLabels, 999)">{{ formatSet(x.trainerLabels) }}</td>
+                <td *ngIf="showTrainingType" class="col-bool" [title]="formatTrainingType(x)">{{ formatTrainingType(x) }}</td>
+                <td *ngIf="showAccreditationNumber" class="col-accreditnumber" [title]="x.accreditationNumber || '-'">{{ x.accreditationNumber || '-' }}</td>
+                <td *ngIf="showTrainingPoints" class="center col-trainingpoints">{{ x.trainingPoints != null ? x.trainingPoints : '-' }}</td>
+                <td *ngIf="showSubsidized" class="center col-bool" [title]="x.subsidized ? 'Oui' : 'Non'"><span class="badge" [class.yes]="x.subsidized" [class.no]="!x.subsidized">{{ x.subsidized ? '✔' : '✖' }}</span></td>
+                <td *ngIf="showComment" class="col-comment" [title]="x.comment || ''"><span class="comment-cell">{{ x.comment || '-' }}</span></td>
+                <td *ngIf="showPilotCenters" class="col-pilotcenters col-rel" [title]="formatSet(x.pilotCenterLabels, 999)">{{ formatSet(x.pilotCenterLabels) }}</td>
+                <td *ngIf="showSectors" class="col-sectors col-rel" [title]="formatSet(x.sectorLabels, 999)">{{ formatSet(x.sectorLabels) }}</td>
+                <td *ngIf="showPrice" class="center col-price" [title]="x.price != null ? x.price + ' €' : '-'">{{ x.price != null ? x.price + ' €' : '-' }}</td>
+                <td *ngIf="showPublicCible" class="col-comment" [title]="x.publicCible || ''"><span class="comment-cell">{{ x.publicCible || '-' }}</span></td>
+                <td *ngIf="showCreatedAt" class="col-created" [title]="formatDate(x.createdAt)">{{ formatDate(x.createdAt) }}</td>
+                <td *ngIf="showUpdatedAt" class="col-updated" [title]="formatDate(x.updatedAt)">{{ formatDate(x.updatedAt) }}</td>
+                <td *ngIf="showUpdatedBy" class="col-updatedby" [title]="x.updatedBy || '-'">{{ x.updatedBy || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer" *ngIf="!loading">
+          <span class="muted">
+            {{ items.length }} sous-module(s) actif(s)
+            <ng-container *ngIf="totalPages > 1"> — page {{ currentPage }}/{{ totalPages }}</ng-container>
+          </span>
+          <div class="pagination" *ngIf="totalPages > 1">
+            <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === -1" class="page-ellipsis">…</span>
+              <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE ARCHIVE -->
+      <div class="table-card" *ngIf="archivedItems.length > 0">
+        <div class="archive-section-header">
+          <h2>Archives ({{ archivedItems.length }})</h2>
+        </div>
+        <div class="table-wrapper" scrollMirror>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="check sticky-check"><input type="checkbox" (change)="toggleAll($any($event.target).checked)" /></th>
+                <th *ngIf="showCenterAccreditation" class="col-centeraccreditation">Agrément centre</th>
+                <th *ngIf="showTitle" class="col-title sticky-name">Titre</th>
+                <th *ngIf="showReceivedDate" class="col-receiveddate">Date réception</th>
+                <th *ngIf="showRequestStatus" class="col-status">Statut</th>
+                <th *ngIf="showStartDate" class="col-startdate">Début</th>
+                <th *ngIf="showEndDate" class="col-enddate">Fin</th>
+                <th *ngIf="showThemes" class="col-themes">Thématiques / Sous-thèmes</th>
+                <th *ngIf="showLicenseTypes" class="col-licensetypes">Types phytolicences</th>
+                <th *ngIf="showPartners" class="col-partners">Organismes partenaires</th>
+                <th *ngIf="showDurationHours" class="center col-durationhours">Durée (h)</th>
+                <th *ngIf="showTrainers" class="col-trainers">Formateur·trices</th>
+                <th *ngIf="showTrainingType" class="col-bool">Type de formation</th>
+                <th *ngIf="showAccreditationNumber" class="col-accreditnumber">N° agrément</th>
+                <th *ngIf="showTrainingPoints" class="center col-trainingpoints">Points</th>
+                <th *ngIf="showSubsidized" class="center col-bool">Subventionné</th>
+                <th *ngIf="showComment" class="col-comment">Commentaire</th>
+                <th *ngIf="showPilotCenters" class="col-pilotcenters">Centres pilotes</th>
+                <th *ngIf="showSectors" class="col-sectors">Secteurs</th>
+                <th *ngIf="showPrice" class="center col-price">Prix (€)</th>
+                <th *ngIf="showPublicCible" class="col-comment">Public cible</th>
+                <th *ngIf="showCreatedAt" class="col-created">Créé le</th>
+                <th *ngIf="showUpdatedAt" class="col-updated">Modifié le</th>
+                <th *ngIf="showUpdatedBy" class="col-updatedby">Modifié par</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let x of archivedItems" [class.row-archiving]="archivingIds.has(x.id!)">
+                <td class="check sticky-check"><input type="checkbox" [checked]="isSelected(x.id!)" (change)="toggleOne(x.id!, $any($event.target).checked)" /></td>
+                <td *ngIf="showCenterAccreditation" class="col-centeraccreditation" [title]="x.centerAccreditationLabel || '-'">
+                  <a class="link" [routerLink]="['/center-accreditations', x.centerAccreditationId]">{{ x.centerAccreditationLabel || '-' }}</a>
+                </td>
+                <td *ngIf="showTitle" class="col-title sticky-name"><a class="link" [routerLink]="['/sub-modules', x.id]">{{ x.title || '-' }}</a></td>
+                <td *ngIf="showReceivedDate" class="col-receiveddate" [title]="formatLocalDate(x.receivedDate)">{{ formatLocalDate(x.receivedDate) }}</td>
+                <td *ngIf="showRequestStatus" class="col-status" [title]="formatRequestStatus(x.requestStatus)"><span class="status-pill status-{{ (x.requestStatus || 'unknown').toLowerCase() }}"><span class="status-dot"></span>{{ formatRequestStatus(x.requestStatus) }}</span></td>
+                <td *ngIf="showStartDate" class="col-startdate" [title]="formatLocalDate(x.startDate)">{{ formatLocalDate(x.startDate) }}</td>
+                <td *ngIf="showEndDate" class="col-enddate" [ngClass]="endDateClass(x.endDate)" [title]="formatLocalDate(x.endDate)">{{ formatLocalDate(x.endDate) }}</td>
+                <td *ngIf="showThemes" class="col-themes col-rel" [title]="formatSet(x.themeLabels, 999)">
+                  <span class="theme-names">{{ formatSet(x.themeLabels) }}</span>
+                  <ng-container *ngIf="(x.subThemeLabels?.length ?? 0) > 0"><br/><span class="subtheme-names">{{ formatSet(x.subThemeLabels) }}</span></ng-container>
+                </td>
+                <td *ngIf="showLicenseTypes" class="col-licensetypes col-rel" [title]="formatSet(x.licenseTypeLabels, 999)">{{ formatSet(x.licenseTypeLabels) }}</td>
+                <td *ngIf="showPartners" class="col-partners col-rel" [title]="formatSet(x.partnerAccreditationLabels, 999)">{{ formatSet(x.partnerAccreditationLabels) }}</td>
+                <td *ngIf="showDurationHours" class="center col-durationhours">{{ x.durationHours != null ? x.durationHours + ' h' : '-' }}</td>
+                <td *ngIf="showTrainers" class="col-trainers col-rel" [title]="formatSet(x.trainerLabels, 999)">{{ formatSet(x.trainerLabels) }}</td>
+                <td *ngIf="showTrainingType" class="col-bool" [title]="formatTrainingType(x)">{{ formatTrainingType(x) }}</td>
+                <td *ngIf="showAccreditationNumber" class="col-accreditnumber" [title]="x.accreditationNumber || '-'">{{ x.accreditationNumber || '-' }}</td>
+                <td *ngIf="showTrainingPoints" class="center col-trainingpoints">{{ x.trainingPoints != null ? x.trainingPoints : '-' }}</td>
+                <td *ngIf="showSubsidized" class="center col-bool" [title]="x.subsidized ? 'Oui' : 'Non'"><span class="badge" [class.yes]="x.subsidized" [class.no]="!x.subsidized">{{ x.subsidized ? '✔' : '✖' }}</span></td>
+                <td *ngIf="showComment" class="col-comment" [title]="x.comment || ''"><span class="comment-cell">{{ x.comment || '-' }}</span></td>
+                <td *ngIf="showPilotCenters" class="col-pilotcenters col-rel" [title]="formatSet(x.pilotCenterLabels, 999)">{{ formatSet(x.pilotCenterLabels) }}</td>
+                <td *ngIf="showSectors" class="col-sectors col-rel" [title]="formatSet(x.sectorLabels, 999)">{{ formatSet(x.sectorLabels) }}</td>
+                <td *ngIf="showPrice" class="center col-price">{{ x.price != null ? x.price + ' €' : '-' }}</td>
+                <td *ngIf="showPublicCible" class="col-comment" [title]="x.publicCible || ''"><span class="comment-cell">{{ x.publicCible || '-' }}</span></td>
+                <td *ngIf="showCreatedAt" class="col-created" [title]="formatDate(x.createdAt)">{{ formatDate(x.createdAt) }}</td>
+                <td *ngIf="showUpdatedAt" class="col-updated" [title]="formatDate(x.updatedAt)">{{ formatDate(x.updatedAt) }}</td>
+                <td *ngIf="showUpdatedBy" class="col-updatedby" [title]="x.updatedBy || '-'">{{ x.updatedBy || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer muted">{{ archivedItems.length }} sous-module(s) archivé(s)</div>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<div class="gs-wrapper">
+
+  <!-- Champ de saisie -->
+  <div class="gs-input-wrap" [class.gs-active]="open">
+    <svg class="gs-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+    </svg>
+    <input
+      class="gs-input"
+      type="text"
+      placeholder="Rechercher..."
+      [(ngModel)]="query"
+      (ngModelChange)="onInput()"
+      autocomplete="off"
+    />
+    <span *ngIf="loading" class="gs-spinner"></span>
+    <button *ngIf="query" class="gs-clear" (click)="query = ''; close()">✕</button>
+  </div>
+
+  <!-- Dropdown résultats (position: fixed → hors stacking context topbar) -->
+  <div *ngIf="open" class="gs-dropdown"
+       [style.top.px]="dropdownTop"
+       [style.left.px]="dropdownLeft">
+
+    <!-- Aucun résultat -->
+    <div *ngIf="!hasResults && !loading" class="gs-empty">
+      Aucun résultat pour "{{ query }}"
+    </div>
+
+    <!-- Groupes par type -->
+    <ng-container *ngFor="let group of grouped">
+      <div class="gs-group-header">
+        <span class="gs-type-dot" [attr.data-type]="group.type"></span>
+        {{ group.type }}
+        <span class="gs-count">{{ group.items.length }}</span>
+      </div>
+      <button
+        *ngFor="let item of group.items"
+        class="gs-item"
+        (click)="navigate(item)"
+      >
+        <span class="gs-item-label">{{ item.label }}</span>
+        <span *ngIf="item.sublabel" class="gs-item-sub">{{ item.sublabel }}</span>
+      </button>
+    </ng-container>
+
+  </div>
+</div>

@@ -1,0 +1,192 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/thematics">Thématiques</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter une ou plusieurs thématiques</h1>
+        </div>
+
+        <a class="btn-secondary" routerLink="/thematics">Retour</a>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> thématique(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter une thématique
+            </button>
+          </div>
+
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="batch-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Thématique #{{ i + 1 }}</div>
+
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving': rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error': rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{
+                      rowStates[i]?.status === 'saving'
+                        ? 'Enregistrement...'
+                        : rowStates[i]?.status === 'success'
+                        ? 'OK'
+                        : rowStates[i]?.status === 'error'
+                        ? 'Erreur'
+                        : 'Prêt'
+                    }}
+                  </span>
+                </div>
+
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer"
+                >
+                  🗑
+                </button>
+              </div>
+
+              <!-- NOM -->
+              <div class="row">
+                <label>Nom *</label>
+
+                <div class="autocomplete">
+                  <input
+                    type="text"
+                    placeholder="Communication, législation..."
+                    formControlName="name"
+                    (input)="onNameChange(i)"
+                    (focus)="onNameFocus(i)"
+                    (blur)="onNameBlur()"
+                    maxlength="120"
+                    autocomplete="off"
+                  />
+
+                  <ul
+                    class="suggestions"
+                    *ngIf="
+                      showNameSuggestions &&
+                      activeRowIndex === i &&
+                      nameSuggestions.length > 0
+                    "
+                  >
+                    <li *ngFor="let s of nameSuggestions">
+                      <button type="button" (click)="pickName(s)">
+                        {{ s }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="field-error" *ngIf="g.get('name')?.touched && g.get('name')?.invalid">
+                  Le nom est obligatoire.
+                </div>
+              </div>
+
+              <!-- DESCRIPTION -->
+              <div class="row">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  placeholder="Description de la thématique..."
+                  formControlName="description"
+                  maxlength="500"
+                ></textarea>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">
+            {{ error }}
+          </div>
+
+          <div class="actions">
+            <button
+              class="btn-primary"
+              type="button"
+              (click)="submitAll('back')"
+              [disabled]="loading"
+            >
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button
+              class="btn-secondary"
+              type="button"
+              (click)="submitAll('stay')"
+              [disabled]="loading"
+            >
+              Enregistrer & continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/thematics">
+              Annuler
+            </a>
+          </div>
+
+          <!-- PANEL POST-CREATION (dernier créé) -->
+          <div class="post-panel" *ngIf="showPostCreatePanel && lastCreatedTheme">
+            <div class="post-panel-head">
+              <div>
+                <div class="post-kicker">Dernière thématique créée</div>
+                <div class="post-title">{{ lastCreatedTheme.name }}</div>
+              </div>
+
+              <button class="icon-btn" type="button" (click)="closePostCreatePanel()" aria-label="Fermer">
+                ✕
+              </button>
+            </div>
+
+            <div class="post-actions">
+              <button class="btn-secondary" type="button" (click)="goToDetailLast()">
+                Aller au détail
+              </button>
+
+              <button class="btn-primary" type="button" (click)="goToAddSubThemeLast()">
+                Ajouter un sous-thème +
+              </button>
+
+              <button class="btn-secondary" type="button" (click)="goToList()">
+                Revenir à la liste
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,293 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \ Thématiques
+          </div>
+          <h1>Thématiques</h1>
+        </div>
+
+        <a *hasRole="['ADMIN','USER']" class="btn-primary" routerLink="/thematics/new">
+          Ajouter thématique +
+        </a>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="left">
+            <label>Action :</label>
+
+            <select [(ngModel)]="action">
+              <option value="">---------</option>
+
+              <ng-container *hasRole="['ADMIN','USER']">
+                <option value="archive">Archiver</option>
+                <option value="unarchive">Désarchiver</option>
+              </ng-container>
+
+              <ng-container *hasRole="['ADMIN']">
+                <option value="delete">Supprimer</option>
+              </ng-container>
+
+              <optgroup label="Exporter tout (actifs)">
+                <option value="export_csv_all">CSV</option>
+                <option value="export_xlsx_all">Excel</option>
+                <option value="export_pdf_all">PDF</option>
+              </optgroup>
+              <optgroup label="Exporter tout (avec archivés)">
+                <option value="export_csv_all_archived">CSV</option>
+                <option value="export_xlsx_all_archived">Excel</option>
+                <option value="export_pdf_all_archived">PDF</option>
+              </optgroup>
+              <optgroup label="Exporter la sélection">
+                <option value="export_csv_selected">CSV</option>
+                <option value="export_xlsx_selected">Excel</option>
+                <option value="export_pdf_selected">PDF</option>
+              </optgroup>
+            </select>
+
+            <button class="btn-secondary" type="button" (click)="runAction()" [disabled]="isSendDisabled()">
+              Envoyer
+            </button>
+
+            <span class="muted">
+              {{ selectedCount() }} sélectionné(s)
+            </span>
+            <div class="pagination" *ngIf="totalPages > 1">
+              <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === -1" class="page-ellipsis">…</span>
+                <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-controls">
+          <div class="control">
+            <label>Recherche</label>
+            <input
+              type="text"
+              placeholder="Communication, législation..."
+              [value]="search"
+              (input)="onSearchChange($any($event.target).value)"
+            />
+          </div>
+
+          <div class="control columns-menu">
+            <label>Colonnes</label>
+
+            <button type="button" class="btn-outline" (click)="toggleColumnsMenu()">
+              {{ columnsButtonLabel }}
+            </button>
+
+            <div class="columns-dropdown" *ngIf="columnsOpen">
+              <label>
+                <input type="checkbox" [checked]="showName" (change)="setShowName($any($event.target).checked)" />
+                Nom
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showDescription" (change)="setShowDescription($any($event.target).checked)" />
+                Description
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showSubThemesCount" (change)="setShowSubThemesCount($any($event.target).checked)" />
+                Sous-thèmes
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showCreatedAt" (change)="setShowCreatedAt($any($event.target).checked)" />
+                Créé le
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showUpdatedAt" (change)="setShowUpdatedAt($any($event.target).checked)" />
+                Modifié le
+              </label>
+
+              <label>
+                <input type="checkbox" [checked]="showUpdatedBy" (change)="setShowUpdatedBy($any($event.target).checked)" />
+                Modifié par
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ wrapper scroll + colonne "Nom" sticky (via CSS) -->
+        <div class="table-wrapper" scrollMirror>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input type="checkbox" (change)="toggleAll($any($event.target).checked)" />
+                </th>
+
+                <th *ngIf="showName" class="sortable col-name sticky-name" (click)="setSort('name')">
+                  Nom
+                  <span class="sort-indicator" *ngIf="sortKey === 'name'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+
+                <th *ngIf="showDescription" class="sortable col-desc" (click)="setSort('description')">
+                  Description
+                  <span class="sort-indicator" *ngIf="sortKey === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+
+                <th *ngIf="showSubThemesCount" class="sortable center col-subthemes" (click)="setSort('subThemesCount')">
+                  Sous-thèmes
+                  <span class="sort-indicator" *ngIf="sortKey === 'subThemesCount'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+
+                <th *ngIf="showCreatedAt" class="sortable col-created" (click)="setSort('createdAt')">
+                  Créé le
+                  <span class="sort-indicator" *ngIf="sortKey === 'createdAt'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+
+                <th *ngIf="showUpdatedAt" class="sortable col-updated" (click)="setSort('updatedAt')">
+                  Modifié le
+                  <span class="sort-indicator" *ngIf="sortKey === 'updatedAt'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                </th>
+
+                <th *ngIf="showUpdatedBy" class="col-updatedby">
+                  Modifié par
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <ng-container *hasRole="['ADMIN','USER']">
+                <tr *ngIf="loading">
+                  <td [attr.colspan]="tableColspan()">Chargement...</td>
+                </tr>
+                <tr *ngIf="!loading && error">
+                  <td [attr.colspan]="tableColspan()">{{ error }}</td>
+                </tr>
+              </ng-container>
+
+              <ng-container *hasRole="['VISITOR']">
+                <tr *ngIf="loading">
+                  <td [attr.colspan]="tableColspan() - 1">Chargement...</td>
+                </tr>
+                <tr *ngIf="!loading && error">
+                  <td [attr.colspan]="tableColspan() - 1">{{ error }}</td>
+                </tr>
+              </ng-container>
+
+              <tr *ngIf="!loading && !error && items.length === 0 && !hasActiveFilter"><td [attr.colspan]="tableColspan()" class="muted">Aucune thématique.</td></tr>
+              <tr *ngIf="!loading && !error && items.length === 0 && hasActiveFilter"><td [attr.colspan]="tableColspan()"><div class="empty-state">Aucun résultat<ng-container *ngIf="search"> pour "{{ search }}"</ng-container>.</div></td></tr>
+
+              <tr *ngFor="let t of pagedItems" [class.row-archiving]="archivingIds.has(t.id!)">
+                <td class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(t.id!)"
+                    (change)="toggleOne(t.id!, $any($event.target).checked)"
+                  />
+                </td>
+
+                <td *ngIf="showName" class="col-name sticky-name" [title]="t.name">
+                  <a class="link" [routerLink]="['/thematics', t.id]">
+                    {{ t.name | uppercase}}
+                  </a>
+                </td>
+
+                <td *ngIf="showDescription" class="col-desc" [title]="t.description || '-'">{{ t.description || '-' }}</td>
+
+                <td *ngIf="showSubThemesCount" class="center col-subthemes" [title]="($any(t).subThemesCount ?? $any(t).subThemes?.length ?? 0)">
+                  {{ ($any(t).subThemesCount ?? $any(t).subThemes?.length ?? 0) }}
+                </td>
+
+                <td *ngIf="showCreatedAt" class="col-created" [title]="formatDate(t.createdAt)">
+                  {{ formatDate(t.createdAt) }}
+                </td>
+
+                <td *ngIf="showUpdatedAt" class="col-updated" [title]="formatDate(t.updatedAt)">
+                  {{ formatDate(t.updatedAt) }}
+                </td>
+
+                <td *ngIf="showUpdatedBy" class="col-updatedby" [title]="t.updatedBy || '-'">
+                  {{ t.updatedBy || '-' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span class="muted">
+            {{ items.length }} thématiques actives
+            <ng-container *ngIf="totalPages > 1"> — page {{ currentPage }}/{{ totalPages }}</ng-container>
+          </span>
+          <div class="pagination" *ngIf="totalPages > 1">
+            <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">&#8249;</button>
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === -1" class="page-ellipsis">…</span>
+              <button *ngIf="p !== -1" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">&#8250;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE ARCHIVE -->
+      <div class="table-card" *ngIf="archivedItems.length > 0">
+        <div class="archive-section-header">
+          <h2>Archives ({{ archivedItems.length }})</h2>
+        </div>
+
+        <div class="table-wrapper" scrollMirror>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input type="checkbox" (change)="toggleAll($any($event.target).checked)" />
+                </th>
+                <th *ngIf="showName" class="col-name sticky-name">Nom</th>
+                <th *ngIf="showDescription" class="col-desc">Description</th>
+                <th *ngIf="showSubThemesCount" class="center col-subthemes">Sous-thèmes</th>
+                <th *ngIf="showCreatedAt" class="col-created">Créé le</th>
+                <th *ngIf="showUpdatedAt" class="col-updated">Modifié le</th>
+                <th *ngIf="showUpdatedBy" class="col-updatedby">Modifié par</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of archivedItems" [class.row-archiving]="archivingIds.has(t.id!)">
+                <td class="check sticky-check" *hasRole="['ADMIN','USER']">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected($any(t).id!)"
+                    (change)="toggleOne($any(t).id!, $any($event.target).checked)"
+                  />
+                </td>
+                <td *ngIf="showName" class="col-name sticky-name" [title]="$any(t).name">
+                  <a class="link" [routerLink]="['/thematics', $any(t).id]">
+                    {{ $any(t).name }}
+                  </a>
+                </td>
+                <td *ngIf="showDescription" class="col-desc" [title]="$any(t).description || '-'">{{ $any(t).description || '-' }}</td>
+                <td *ngIf="showSubThemesCount" class="center col-subthemes" [title]="($any(t).subThemesCount ?? $any(t).subThemes?.length ?? 0)">
+                  {{ ($any(t).subThemesCount ?? $any(t).subThemes?.length ?? 0) }}
+                </td>
+                <td *ngIf="showCreatedAt" class="col-created" [title]="formatDate($any(t).createdAt)">{{ formatDate($any(t).createdAt) }}</td>
+                <td *ngIf="showUpdatedAt" class="col-updated" [title]="formatDate($any(t).updatedAt)">{{ formatDate($any(t).updatedAt) }}</td>
+                <td *ngIf="showUpdatedBy" class="col-updatedby" [title]="$any(t).updatedBy || '-'">{{ $any(t).updatedBy || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer muted">
+          {{ archivedItems.length }} thématiques archivées
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

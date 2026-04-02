@@ -1,0 +1,41 @@
+@import '../../../../shared/styles/create-page.css';
+
+/* ===================================================
+   TRAINER-CREATE — spécifique
+=================================================== */
+
+/* ─── Item formateur·trice (outer batch card) ─── */
+.trainer-item {
+  border: 2px solid #c8d8e4;
+  background: #f4f8fb;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+/* Listes checkbox */
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fafbfc;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}

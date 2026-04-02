@@ -1,0 +1,177 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/users">Utilisateurs</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter un ou plusieurs utilisateurs</h1>
+        </div>
+
+        <a class="btn-secondary" routerLink="/users">Retour</a>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> utilisateur(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un utilisateur
+            </button>
+          </div>
+
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="batch-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Utilisateur #{{ i + 1 }}</div>
+
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving': rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error': rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{
+                      rowStates[i]?.status === 'saving'
+                        ? 'Enregistrement...'
+                        : rowStates[i]?.status === 'success'
+                        ? 'OK'
+                        : rowStates[i]?.status === 'error'
+                        ? 'Erreur'
+                        : 'Prêt'
+                    }}
+                  </span>
+                </div>
+
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer"
+                >
+                  🗑
+                </button>
+              </div>
+
+              <!-- Email -->
+              <div class="row">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  placeholder="user@b12.local"
+                  formControlName="email"
+                  maxlength="160"
+                  [disabled]="loading"
+                />
+
+                <div class="field-error" *ngIf="g.get('email')?.touched && g.get('email')?.errors?.['required']">
+                  Email obligatoire.
+                </div>
+                <div class="field-error" *ngIf="g.get('email')?.touched && g.get('email')?.errors?.['email']">
+                  Format d'email invalide.
+                </div>
+              </div>
+
+              <!-- Rôle -->
+              <div class="row">
+                <label>Rôle *</label>
+                <select formControlName="role" [disabled]="loading">
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="USER">USER</option>
+                  <option value="VISITOR">VISITOR</option>
+                </select>
+              </div>
+
+              <!-- Mot de passe provisoire -->
+              <div class="row">
+                <label>Mot de passe provisoire *</label>
+
+                <div class="password-field">
+                  <input
+                    [type]="showPasswordByRow[i] ? 'text' : 'password'"
+                    placeholder="Mot de passe provisoire"
+                    formControlName="tempPassword"
+                    maxlength="120"
+                    [disabled]="loading"
+                  />
+
+                  <button
+                    type="button"
+                    class="btn-eye"
+                    (click)="togglePassword(i)"
+                    [disabled]="loading"
+                    [attr.title]="showPasswordByRow[i] ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                  >
+                    {{ showPasswordByRow[i] ? 'Masquer' : 'Afficher' }}
+                  </button>
+                </div>
+
+                <div class="hint">
+                  L’utilisateur devra modifier son mot de passe à sa prochaine connexion.
+                </div>
+
+                <div
+                  class="field-error"
+                  *ngIf="g.get('tempPassword')?.touched && g.get('tempPassword')?.errors?.['required']"
+                >
+                  Mot de passe provisoire obligatoire.
+                </div>
+                <div
+                  class="field-error"
+                  *ngIf="g.get('tempPassword')?.touched && g.get('tempPassword')?.errors?.['minlength']"
+                >
+                  Minimum 6 caractères.
+                </div>
+              </div>
+
+              <!-- Erreur ligne -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Erreur globale -->
+          <div *ngIf="error" class="error">
+            {{ error }}
+          </div>
+
+          <!-- Actions -->
+          <div class="actions">
+            <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Créer tout' }}
+            </button>
+
+            <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+              Créer & continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/users">
+              Annuler
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

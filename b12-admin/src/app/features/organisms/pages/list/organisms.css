@@ -1,0 +1,58 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ===================================================
+   ORGANISMS — spécifique
+=================================================== */
+
+.data-table { min-width: 1180px; }
+
+.col-name        { width: 180px; }
+.col-abbrev      { width: 160px; }
+.col-sectors     { width: 220px; }
+.col-pilotcenters { width: 220px; }
+
+/* ===================================================
+   PAGINATION
+=================================================== */
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #cfd9e2;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a3b47;
+}
+
+.page-btn:hover:not(:disabled) { background: #f3f7fb; }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+.page-btn.active {
+  background: #4a7d96;
+  color: #fff;
+  border-color: #3c6a80;
+}
+
+.page-ellipsis {
+  padding: 0 4px;
+  color: #6c7a86;
+}

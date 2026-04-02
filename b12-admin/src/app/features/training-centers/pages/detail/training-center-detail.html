@@ -1,0 +1,176 @@
+<div class="app-shell">
+    <app-topbar></app-topbar>
+  
+    <div class="content-shell">
+      <app-sidebar></app-sidebar>
+  
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="breadcrumb">
+              <a class="crumb-link" routerLink="/training-centers">Centres de formation</a><span class="crumb-sep">›</span><span>Détail</span>
+            </div>
+  
+            <div class="title-row">
+              <h1>Modifier un centre de formation</h1>
+  
+              <span class="pill" [ngClass]="currentArchived ? 'pill-archived' : 'pill-active'">
+                {{ currentArchived ? 'Archivé' : 'Actif' }}
+              </span>
+            </div>
+          </div>
+  
+          <div class="head-actions">
+            <a class="btn-secondary" routerLink="/training-centers">Retour</a>
+  
+            <button
+              *hasRole="['ADMIN','USER']"
+              class="btn-primary"
+              type="button"
+              (click)="save()"
+              [disabled]="loading"
+            >
+              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+  
+        <div class="table-card">
+          <div class="form" [formGroup]="form">
+            <div *ngIf="success" class="success">{{ success }}</div>
+            <div *ngIf="error" class="error">{{ error }}</div>
+  
+            <!-- =========================
+                 INFOS
+            ========================== -->
+            <div class="section-head">
+              <h2>Informations</h2>
+              <p class="muted">Les champs marqués * sont obligatoires.</p>
+            </div>
+  
+            <div class="grid-2">
+              <div class="row">
+                <label>Nom *</label>
+                <input type="text" formControlName="name" maxlength="180" />
+                <div class="field-error" *ngIf="form.controls.name.touched && form.controls.name.invalid">
+                  Le nom est obligatoire.
+                </div>
+              </div>
+  
+              <div class="row">
+                <label>Numéro d’entreprise *</label>
+                <input
+                  type="text"
+                  formControlName="companyNumber"
+                  maxlength="30"
+                  placeholder="Ex: BE0123.456.789"
+                />
+                <div
+                  class="field-error"
+                  *ngIf="form.controls.companyNumber.touched && form.controls.companyNumber.invalid"
+                >
+                  Le numéro d’entreprise est obligatoire.
+                </div>
+              </div>
+            </div>
+  
+            <!-- =========================
+                 SIÈGE SOCIAL (A1)
+            ========================== -->
+            <div class="section-head">
+              <h2>Siège social (HQ)</h2>
+              <p class="muted">Adresse du centre (pas les sites/agréments).</p>
+            </div>
+  
+            <div class="grid-2">
+              <div class="row">
+                <label>Rue</label>
+                <input type="text" formControlName="hqStreet" maxlength="180" placeholder="Ex: Rue de Namur" />
+              </div>
+  
+              <div class="row">
+                <label>Numéro</label>
+                <input type="text" formControlName="hqNumber" maxlength="30" placeholder="Ex: 12A" />
+              </div>
+  
+              <div class="row">
+                <label>Code postal</label>
+                <input type="text" formControlName="hqPostalCode" maxlength="20" placeholder="Ex: 1000" (input)="onPostalCodeInput()" />
+              </div>
+  
+              <div class="row">
+                <label>Ville</label>
+                <input type="text" formControlName="hqCity" maxlength="120" placeholder="Ex: Bruxelles" />
+              </div>
+  
+              <div class="row">
+                <label>Province</label>
+                <input type="text" formControlName="hqProvince" maxlength="120" placeholder="Ex: Brabant wallon" />
+              </div>
+            </div>
+  
+            <!-- =========================
+                 ASSOCIATIONS
+            ========================== -->
+            <div class="section-head">
+              <h2>Associations</h2>
+              <p class="muted">Sélection multiple possible.</p>
+            </div>
+  
+            <div class="grid-2">
+              <div class="row">
+                <label>Secteurs associés</label>
+                <select data-role="sectors" multiple (change)="onMultiChange($event, 'sectorIds')">
+                  <option *ngFor="let s of sectors" [value]="s.id" [selected]="isSectorSelected(s.id)">
+                    {{ s.name | uppercase}}
+                  </option>
+                </select>
+              </div>
+  
+              <div class="row">
+                <label>Centres pilotes associés</label>
+                <select data-role="pilotCenters" multiple (change)="onMultiChange($event, 'pilotCenterIds')">
+                  <option *ngFor="let pc of pilotCenters" [value]="pc.id" [selected]="isPilotCenterSelected(pc.id)">
+                    {{ pc.name | uppercase }}
+                  </option>
+                </select>
+              </div>
+            </div>
+  
+            <div class="actions">
+              <button
+                *hasRole="['ADMIN','USER']"
+                class="btn-primary"
+                type="button"
+                (click)="save()"
+                [disabled]="loading"
+              >
+                {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+              </button>
+  
+              <button
+                *hasRole="['ADMIN','USER']"
+                class="btn-secondary"
+                type="button"
+                (click)="toggleArchive()"
+                [disabled]="loading"
+              >
+                {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+              </button>
+  
+              <button
+                *hasRole="['ADMIN','USER']"
+                class="btn-danger"
+                type="button"
+                (click)="delete()"
+                [disabled]="loading"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  

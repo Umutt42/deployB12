@@ -1,0 +1,118 @@
+/* =====================
+   THEME GLOBAL B12
+   ===================== */
+   :root {
+    --bg-app: #f6f8fb;
+    --bg-sidebar: #0f172a;
+    --bg-sidebar-hover: #1e293b;
+    --bg-card: #ffffff;
+  
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+  
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #cbd5f5;
+  
+    --border-soft: #e5e7eb;
+    --border-color: #d7dfe6;
+    --border-light: #eef2f6;
+
+    --radius: 12px;
+    --radius-sm: 6px;
+    --radius-input: 8px;
+    --radius-card: 10px;
+    --radius-btn: 18px;
+
+    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-app);
+    font-family: "Inter", "Segoe UI", sans-serif;
+    color: var(--text-main);
+
+    /* empêche le scroll horizontal global */
+    overflow-x: hidden;
+  }
+  
+  a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  
+  button {
+    border-radius: var(--radius);
+    font-weight: 600;
+  }
+
+  /* ===========================
+     Autocomplete (global)
+     =========================== */
+  .autocomplete {
+    position: relative;
+  }
+
+  .suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    list-style: none !important;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid #d7dfe6;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+    max-height: 240px;
+    overflow: auto;
+  }
+
+  .suggestions li {
+    list-style: none !important;
+  }
+
+  .suggestions li button {
+    width: 100%;
+    text-align: left;
+    border: 0 !important;
+    background: transparent;
+    padding: 10px;
+    border-radius: 8px !important;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .suggestions li button:hover {
+    background: #f2f6fa;
+  }
+
+/* ===========================
+   Breadcrumb (global)
+   =========================== */
+.crumb-sep {
+  color: #9aa7b2;
+  font-size: 13px;
+}
+
+.crumb-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.crumb-link:hover {
+  text-decoration: underline;
+}
+
+

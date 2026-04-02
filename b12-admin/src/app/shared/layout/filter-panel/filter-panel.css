@@ -1,0 +1,41 @@
+.filters {
+  background: transparent;          /* ✅ dans une sidebar dark */
+  border: none;
+  padding: 0;
+}
+
+/* sections */
+.block {
+  margin-bottom: 14px;
+}
+
+/* titre de bloc */
+.block-title {
+  font-weight: 800;
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: #cbd5e1;                   /* ✅ texte clair */
+  opacity: 0.95;
+}
+
+/* liens */
+.link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: #93c5fd;                   /* ✅ bleu clair */
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.link:hover {
+  background: #1e293b;              /* ✅ hover dark */
+}
+
+/* actif (optionnel) */
+.link.active {
+  background: rgba(37, 99, 235, 0.18);
+  color: #bfdbfe;
+}

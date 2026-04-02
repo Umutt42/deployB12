@@ -1,0 +1,203 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <!-- Header -->
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/thematics">Thématiques</a>
+            <span class="crumb-sep">›</span>
+            <span>Détail</span>
+          </div>
+
+          <h1>Détail d’une thématique</h1>
+
+          <div class="muted" *ngIf="theme">
+            <span class="pill">ID: {{ theme.id }}</span>
+            <span class="pill">Sous-thèmes: {{ subThemesCount() }}</span>
+          </div>
+        </div>
+
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/thematics">Retour</a>
+
+          <!-- ✅ NOUVEAU : Modifier thématique (USER + ADMIN) -->
+          <a
+            *hasRole="['ADMIN','USER']"
+            class="btn-outline"
+            [routerLink]="['/thematics', id, 'edit']"
+          >
+            Modifier
+          </a>
+
+          <!-- ✅ USER + ADMIN -->
+          <a
+            *hasRole="['ADMIN','USER']"
+            class="btn-primary"
+            [routerLink]="['/thematics', id, 'sub-themes', 'new']"
+          >
+            Ajouter sous-thème +
+          </a>
+        </div>
+      </div>
+
+      <!-- Chargement -->
+      <div class="table-card" *ngIf="loading">
+        <div class="table-toolbar">
+          <span class="muted">Chargement...</span>
+        </div>
+      </div>
+
+      <!-- Erreur -->
+      <div class="table-card" *ngIf="!loading && error">
+        <div class="table-toolbar">
+          <span class="error">{{ error }}</span>
+        </div>
+      </div>
+
+      <!-- Contenu -->
+      <ng-container *ngIf="!loading && !error && theme">
+        <!-- Infos thématique -->
+        <div class="table-card">
+          <div class="table-toolbar">
+            <strong>Informations</strong>
+          </div>
+
+          <div class="detail-grid">
+            <div class="field">
+              <div class="label">Nom</div>
+              <div class="value">{{ theme.name | uppercase }}</div>
+            </div>
+
+            <div class="field">
+              <div class="label">Description</div>
+              <div class="value">
+                {{ theme.description || '-' }}
+              </div>
+            </div>
+
+            <div class="field small">
+              <div class="label">Archivé</div>
+              <div class="value center">
+                <span
+                  class="badge"
+                  [class.no]="!theme.archived"
+                  [class.yes]="theme.archived"
+                >
+                  {{ yesNo(theme.archived) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sous-thèmes -->
+        <div class="table-card subthemes-card">
+          <div class="table-toolbar">
+            <strong>Sous-thèmes</strong>
+            <span class="muted">{{ subThemesCount() }} élément(s)</span>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable" (click)="setSubSort('name')">
+                  Nom
+                  <span class="sort-indicator" *ngIf="subSortKey === 'name'">
+                    {{ subSortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th class="sortable" (click)="setSubSort('description')">
+                  Description
+                  <span class="sort-indicator" *ngIf="subSortKey === 'description'">
+                    {{ subSortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th class="sortable center" (click)="setSubSort('hours')">
+                  Heures
+                  <span class="sort-indicator" *ngIf="subSortKey === 'hours'">
+                    {{ subSortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <th class="sortable center" (click)="setSubSort('archived')">
+                  Archivé
+                  <span class="sort-indicator" *ngIf="subSortKey === 'archived'">
+                    {{ subSortDir === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
+
+                <!-- ✅ Actions pour USER + ADMIN -->
+                <th class="center" *hasRole="['ADMIN','USER']">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngIf="subThemesCount() === 0">
+                <td class="muted" [attr.colspan]="5">
+                  Aucun sous-thème pour cette thématique.
+                </td>
+              </tr>
+
+              <!-- ✅ IMPORTANT : on affiche la liste triée -->
+              <tr *ngFor="let st of sortedSubThemes()">
+                <!-- ✅ NOUVEAU : Nom cliquable pour USER + ADMIN -->
+                <td class="name">
+                  <a
+                    *hasRole="['ADMIN','USER']"
+                    class="link"
+                    [routerLink]="['/thematics', id, 'sub-themes', st.id]"
+                  >
+                    {{ st.name | uppercase }}
+                  </a>
+
+                  <!-- VISITOR : juste texte -->
+                  <span *hasRole="['VISITOR']">{{ st.name | uppercase }}</span>
+                </td>
+
+                <td class="desc">
+                  {{ st.description || '-' }}
+                </td>
+
+                <td class="center">
+                  {{ st.hours ?? '-' }}
+                </td>
+
+                <td class="center">
+                  <span
+                    class="badge"
+                    [class.no]="!st.archived"
+                    [class.yes]="st.archived"
+                  >
+                    {{ yesNo(st.archived) }}
+                  </span>
+                </td>
+
+                <!-- ✅ SUPPRESSION : USER + ADMIN -->
+                <td class="center" *hasRole="['ADMIN','USER']">
+                  <button
+                    class="btn-icon danger"
+                    title="Supprimer le sous-thème"
+                    (click)="deleteSubTheme(st.id!)"
+                  >
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="table-footer muted">
+            {{ subThemesCount() }} sous-thèmes
+          </div>
+        </div>
+      </ng-container>
+    </main>
+  </div>
+</div>

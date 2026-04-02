@@ -1,0 +1,86 @@
+<div class="app-shell">
+    <app-topbar></app-topbar>
+  
+    <div class="content-shell">
+      <app-sidebar></app-sidebar>
+  
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="breadcrumb">
+              <a class="crumb-link" routerLink="/thematics">Thématiques</a>
+              <span class="crumb-sep">›</span>
+              <a class="crumb-link" [routerLink]="['/thematics', id]">Détail</a>
+              <span class="crumb-sep">›</span>
+              <span>Modification</span>
+            </div>
+  
+            <h1>Modifier une thématique</h1>
+  
+            <div class="muted" *ngIf="theme">
+              <span class="pill">ID: {{ theme.id }}</span>
+              <span class="pill">Sous-thèmes: {{ theme.subThemes?.length ?? 0 }}</span>
+            </div>
+          </div>
+  
+          <div class="head-actions">
+            <a class="btn-secondary" [routerLink]="['/thematics', id]">Retour</a>
+          </div>
+        </div>
+  
+        <div class="card">
+          <div *ngIf="loading" class="muted">Chargement…</div>
+          <div *ngIf="!loading && error" class="error">{{ error }}</div>
+  
+          <form *ngIf="!loading && theme" (ngSubmit)="save()">
+            <div class="grid">
+              <div class="field full">
+                <label>Nom</label>
+                <input
+                  type="text"
+                  [(ngModel)]="name"
+                  name="name"
+                  required
+                  placeholder="Communication, Législation…"
+                />
+                <div class="hint">Nom affiché dans la liste des thématiques.</div>
+              </div>
+  
+              <div class="field full">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  [(ngModel)]="description"
+                  name="description"
+                  placeholder="Décrivez brièvement la thématique…"
+                ></textarea>
+              </div>
+  
+              <div class="field">
+                <label class="inline">
+                  <input type="checkbox" [(ngModel)]="archived" name="archived" />
+                  Archivé
+                </label>
+                <div class="hint">Masquer la thématique des listes actives.</div>
+              </div>
+            </div>
+            <div class="actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                (click)="cancel()"
+                [disabled]="saving"
+              >
+                Annuler
+              </button>
+  
+              <button type="submit" class="btn-primary" [disabled]="saving">
+                {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+  

@@ -1,0 +1,37 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: b12-postgres
+    environment:
+      POSTGRES_DB: b12
+      POSTGRES_USER: b12
+      POSTGRES_PASSWORD: b12
+    ports:
+      - "5432:5432"
+    volumes:
+      - b12_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U b12"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: b12-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/b12
+      SPRING_DATASOURCE_USERNAME: b12
+      SPRING_DATASOURCE_PASSWORD: b12
+      APP_JWT_SECRET: "CHANGE_ME_TO_A_LONG_RANDOM_SECRET_MIN_32_CHARS"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  b12_pgdata:

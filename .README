@@ -1,0 +1,58 @@
+# B12 – Gestion des centres de formation et des agréments
+
+## 📌 Présentation du projet
+
+**B12** est une application web développée dans le cadre d’un **stage au sein de Corder ASBL**.  
+L’objectif de l’application est de **gérer les centres de formation**, les **agréments des centres** ainsi que les **agréments de formation**, dans le respect du cadre légal lié à la phytolicence et à la formation professionnelle.
+
+L’application permet notamment :
+- l’enregistrement et la gestion des centres de formation,
+- la gestion des agréments centre et formation,
+- la structuration des thématiques et sous-thématiques,
+- une interface d’administration moderne et ergonomique.
+
+---
+
+## 🏗️ Architecture générale
+
+Le projet suit une **architecture client–serveur** :
+
+- **Frontend** : Angular  
+- **Backend** : Spring Boot (API REST)
+- **Base de données** : PostgreSQL
+
+## 🖥️ Frontend – Angular (b12-admin)
+
+### Technologies utilisées
+- Angular
+- TypeScript
+- HTML / SCSS
+- RxJS
+- Angular Router
+- HttpClient
+
+### Fonctionnalités principales
+- Interface d’administration
+- Gestion des centres de formation
+- Gestion des agréments
+- Gestion des thèmes et sous-thèmes
+- Communication avec l’API REST
+
+### Lancement du frontend
+```bash
+cd b12-admin
+npm install
+ng serve
+
+### Application accessible sur : 
+http://localhost:4200
+
+### Lancement du Backend : 
+cd b12-api
+mvn spring-boot:run
+
+### Auteur
+
+- Demirkazik Umut
+- Infomatique & systèmes -Développement d'applications 
+- HE2B - ESI

@@ -1,0 +1,809 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main" #statsContent>
+
+      <!-- ── En-tête ── -->
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \
+            <a routerLink="/sub-modules">Sous-modules</a> \
+            Statistiques
+          </div>
+          <h1>Statistiques — Sous-modules</h1>
+        </div>
+
+        <div class="export-actions" *ngIf="!loading && !error">
+          <span class="export-label">Exporter :</span>
+          <button class="btn-export" type="button" (click)="exportExcel()" [disabled]="exporting">Excel</button>
+          <button class="btn-export btn-export-pdf" type="button" (click)="exportPdf()" [disabled]="exporting">
+            {{ exporting ? 'Génération...' : 'PDF' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Skeleton ── -->
+      <ng-container *ngIf="loading">
+        <div class="skeleton-bar" style="width:160px; margin-bottom:12px"></div>
+        <div class="kpi-grid">
+          <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5]">
+            <div class="sk sk-short"></div>
+            <div class="sk sk-tall"></div>
+          </div>
+        </div>
+        <div class="skeleton-bar" style="width:200px; margin-top:32px; margin-bottom:12px"></div>
+        <div class="skeleton-card" style="height:260px"></div>
+      </ng-container>
+
+      <!-- ── Erreur ── -->
+      <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+      <ng-container *ngIf="!loading && !error">
+
+        <!-- ════════════════════════════════════════════
+             KPI CARDS
+             ════════════════════════════════════════════ -->
+        <div class="section-title">Vue d'ensemble</div>
+        <div class="kpi-grid">
+
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Total sous-modules</span>
+                <span class="kpi-value kpi-blue-val">{{ kpiTotal }}</span>
+                <span class="kpi-sub">sous-modules actifs</span>
+              </div>
+              <div class="kpi-icon kpi-icon-blue">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Acceptés</span>
+                <span class="kpi-value kpi-green-val">{{ kpiAccepted }}</span>
+                <span class="kpi-sub">{{ kpiAcceptedPct }} du total</span>
+              </div>
+              <div class="kpi-icon kpi-icon-green">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-red">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Refusés</span>
+                <span class="kpi-value kpi-red-val">{{ kpiRefused }}</span>
+                <span class="kpi-sub">sous-modules refusés</span>
+              </div>
+              <div class="kpi-icon kpi-icon-red">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">En cours</span>
+                <span class="kpi-value kpi-orange-val">{{ kpiReceived }}</span>
+                <span class="kpi-sub">dossiers reçus</span>
+              </div>
+              <div class="kpi-icon kpi-icon-orange">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">En attente</span>
+                <span class="kpi-value kpi-purple-val">{{ kpiPending }}</span>
+                <span class="kpi-sub">en attente de décision</span>
+              </div>
+              <div class="kpi-icon kpi-icon-purple">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Filtre global Actif / Archivé ── -->
+        <div class="filters-bar" style="margin-bottom: 16px;">
+          <div class="filter-ctrl">
+            <label>Statut</label>
+            <select [(ngModel)]="filterArchived">
+              <option value="active">Actifs</option>
+              <option value="archived">Archivés</option>
+              <option value="all">Les deux</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 1 — Par année / statut
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 1 — Par année et statut
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition annuelle des statuts</span>
+              <span class="badge-count">{{ t1Rows.length }} année(s)</span>
+            </div>
+            <button *ngIf="hasActiveF1" class="btn-reset" type="button" (click)="resetF1()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>Type de formation</label>
+              <select [(ngModel)]="f1.formationType">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique — barres empilées par année -->
+          <div class="stacked-chart" *ngIf="t1Rows.length > 0">
+            <div class="stacked-legend">
+              <span class="stacked-dot stacked-dot-accepted"></span><span class="stacked-lbl">Accepté</span>
+              <span class="stacked-dot stacked-dot-refused"></span><span class="stacked-lbl">Refusé</span>
+              <span class="stacked-dot stacked-dot-received"></span><span class="stacked-lbl">En cours</span>
+              <span class="stacked-dot stacked-dot-pending"></span><span class="stacked-lbl">En attente</span>
+            </div>
+            <div class="stacked-rows">
+              <div class="stacked-row" *ngFor="let r of t1Rows">
+                <div class="stacked-year">{{ r.year }}</div>
+                <div class="stacked-bar-track">
+                  <div class="stacked-seg stacked-seg-accepted" [style.width]="t1SegW(r.accepted, r.total)" [title]="'Acceptés : ' + r.accepted"></div>
+                  <div class="stacked-seg stacked-seg-refused"  [style.width]="t1SegW(r.refused,   r.total)" [title]="'Refusés : '  + r.refused"></div>
+                  <div class="stacked-seg stacked-seg-received" [style.width]="t1SegW(r.received,  r.total)" [title]="'En cours : ' + r.received"></div>
+                  <div class="stacked-seg stacked-seg-pending"  [style.width]="t1SegW(r.pending,   r.total)" [title]="'En attente : '+ r.pending"></div>
+                </div>
+                <div class="stacked-total">{{ r.total }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tableau -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Année</th>
+                  <th class="col-num col-accepted">Accepté</th>
+                  <th class="col-num col-refused">Refusé</th>
+                  <th class="col-num col-received">En cours</th>
+                  <th class="col-num col-pending">En attente</th>
+                  <th class="col-num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t1Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t1Rows">
+                  <td class="col-label">{{ r.year }}</td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted" *ngIf="r.accepted > 0">{{ r.accepted }}</span>
+                    <span *ngIf="r.accepted === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-refused" *ngIf="r.refused > 0">{{ r.refused }}</span>
+                    <span *ngIf="r.refused === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-received" *ngIf="r.received > 0">{{ r.received }}</span>
+                    <span *ngIf="r.received === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-pending" *ngIf="r.pending > 0">{{ r.pending }}</span>
+                    <span *ngIf="r.pending === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num col-total-val">{{ r.total }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t1Rows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t1Total.accepted || '—' }}</td>
+                  <td class="col-num">{{ t1Total.refused  || '—' }}</td>
+                  <td class="col-num">{{ t1Total.received || '—' }}</td>
+                  <td class="col-num">{{ t1Total.pending  || '—' }}</td>
+                  <td class="col-num">{{ t1Total.total }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 2 — Type de formation
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 2 — Type de formation
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition Initiale / Continue</span>
+              <span class="badge-count">{{ t2Total }} sous-module(s)</span>
+            </div>
+            <button *ngIf="hasActiveF2" class="btn-reset" type="button" (click)="resetF2()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f2.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f2.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f2.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="type-donut-section" *ngIf="t2Total > 0">
+            <div class="type-donut-wrap">
+              <div class="type-donut" [style.background]="t2DonutGradient">
+                <div class="type-donut-hole">
+                  <span class="type-donut-total">{{ t2Total }}</span>
+                  <span class="type-donut-sub">sous-modules</span>
+                </div>
+              </div>
+            </div>
+            <div class="type-donut-legend">
+              <div class="type-legend-item">
+                <span class="type-legend-dot" style="background:#0e7a75"></span>
+                <span class="type-legend-label">Initiale</span>
+                <span class="type-legend-count">{{ t2Initial }}</span>
+                <span class="type-legend-pct">{{ t2InitialPct }}</span>
+              </div>
+              <div class="type-legend-item">
+                <span class="type-legend-dot" style="background:#4d9c18"></span>
+                <span class="type-legend-label">Continue</span>
+                <span class="type-legend-count">{{ t2Continuous }}</span>
+                <span class="type-legend-pct">{{ t2ContinuousPct }}</span>
+              </div>
+              <div class="type-legend-item" *ngIf="t2Both > 0">
+                <span class="type-legend-dot" style="background:#12a19a"></span>
+                <span class="type-legend-label">Initiale + Continue</span>
+                <span class="type-legend-count">{{ t2Both }}</span>
+                <span class="type-legend-pct">{{ t2BothPct }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Type de formation</th>
+                  <th class="col-num">Nb sous-modules</th>
+                  <th class="col-num">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="col-label"><span class="type-badge type-badge-complete">Initiale</span></td>
+                  <td class="col-num">{{ t2Initial || '—' }}</td>
+                  <td class="col-num col-avg">{{ t2InitialPct }}</td>
+                </tr>
+                <tr>
+                  <td class="col-label"><span class="type-badge" style="background:#dcfce7;color:#166534">Continue</span></td>
+                  <td class="col-num">{{ t2Continuous || '—' }}</td>
+                  <td class="col-num col-avg">{{ t2ContinuousPct }}</td>
+                </tr>
+                <tr *ngIf="t2Both > 0">
+                  <td class="col-label"><span class="type-badge" style="background:#cce8e7;color:#0a6d67">Initiale + Continue</span></td>
+                  <td class="col-num">{{ t2Both }}</td>
+                  <td class="col-num col-avg">{{ t2BothPct }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t2Total }}</td>
+                  <td class="col-num">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 3 — Par type de phytolicence
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 3 — Par type de phytolicence
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par type de phytolicence</span>
+              <span class="badge-count">{{ t3LicenseRows.length }} type(s)</span>
+            </div>
+            <button *ngIf="hasActiveF3" class="btn-reset" type="button" (click)="resetF3()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f3.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f3.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f3.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type de formation</label>
+              <select [(ngModel)]="f3.formationType">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Barres horizontales -->
+          <div class="hbar-section" *ngIf="t3LicenseRows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t3LicenseRows; let i = index">
+              <div class="hbar-label-long" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill" [style.width]="t3BarW(r.count)"
+                     [style.background]="LICENSE_COLORS[i % LICENSE_COLORS.length]"></div>
+              </div>
+              <span class="hbar-count">{{ r.count }}</span>
+              <span class="hbar-pct">{{ r.pct }}</span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Type de phytolicence</th>
+                  <th class="col-num">Nb sous-modules</th>
+                  <th class="col-num">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t3LicenseRows.length === 0">
+                  <td colspan="3" class="empty-row">Aucune donnée.</td>
+                </tr>
+                <tr *ngFor="let r of t3LicenseRows; let i = index">
+                  <td class="col-label">
+                    <span class="license-dot" [style.background]="LICENSE_COLORS[i % LICENSE_COLORS.length]"></span>
+                    {{ r.label }}
+                  </td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num col-avg">{{ r.pct }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t3LicenseRows.length > 0">
+                <tr>
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t3Total }}</td>
+                  <td class="col-num">—</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 4 — Thèmes / Sous-thèmes
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 4 — Thèmes et sous-thèmes
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition par thème et sous-thème</span>
+              <span class="badge-count">{{ t4Rows.length }} ligne(s)</span>
+            </div>
+            <button *ngIf="hasActiveF4" class="btn-reset" type="button" (click)="resetF4()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f4.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f4.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f4.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type de formation</label>
+              <select [(ngModel)]="f4.formationType">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique barres horizontales avec toggle -->
+          <div class="t5-chart-section" *ngIf="t4ChartRows.length > 0">
+            <div class="t5-chart-header">
+              <span class="t5-chart-title">Volume par thème</span>
+              <div class="t13-toggle">
+                <button class="t13-toggle-btn" [class.active]="f4ChartMode === 'theme'"
+                        type="button" (click)="f4ChartMode = 'theme'">Par thème</button>
+                <button class="t13-toggle-btn" [class.active]="f4ChartMode === 'subtheme'"
+                        type="button" (click)="f4ChartMode = 'subtheme'">Par sous-thème</button>
+              </div>
+            </div>
+            <div class="hbar-section" style="border-bottom:none; padding-top:0">
+              <div class="hbar-row" *ngFor="let r of t4ChartRows; let i = index">
+                <div class="hbar-label-long">
+                  <span class="t5-label-main" [title]="r.label">{{ r.label }}</span>
+                  <span class="t5-label-sub" *ngIf="r.sublabel">{{ r.sublabel }}</span>
+                </div>
+                <div class="hbar-track">
+                  <div class="hbar-fill" [style.width]="t4BarW(r.count)"
+                       [style.background]="THEME_COLORS[i % THEME_COLORS.length]"></div>
+                </div>
+                <span class="hbar-count">{{ r.count }}</span>
+                <span class="hbar-pct">{{ t4Pct(r.count) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tableau détaillé -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Thème</th>
+                  <th>Sous-thème</th>
+                  <th class="col-num">Nb sous-modules</th>
+                  <th class="col-num">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t4Rows.length === 0">
+                  <td colspan="4" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t4Rows; let i = index">
+                  <td class="col-label">
+                    <span class="license-dot" [style.background]="t4ThemeColor(r.theme)"></span>
+                    {{ r.theme }}
+                  </td>
+                  <td>{{ r.subTheme }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num col-avg">{{ t4Pct(r.count) }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t4Rows.length > 0">
+                <tr>
+                  <td class="foot-label" colspan="2">TOTAL</td>
+                  <td class="col-num">{{ t4GrandTotal }}</td>
+                  <td class="col-num">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 5 — Durée par thématiques et sous-thèmes
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 5 — Durée par thématiques et sous-thèmes
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Durée totale et moyenne par thème / sous-thème</span>
+              <span class="badge-count">{{ t5Rows.length }} ligne(s)</span>
+            </div>
+            <button *ngIf="hasActiveF5" class="btn-reset" type="button" (click)="resetF5()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f5.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f5.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f5.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type de formation</label>
+              <select [(ngModel)]="f5.formationType">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique donut par thème -->
+          <div class="type-donut-section" *ngIf="t5ByTheme.length > 0">
+            <div class="type-donut-wrap">
+              <div class="type-donut" [style.background]="t5DonutGradient">
+                <div class="type-donut-hole">
+                  <span class="type-donut-total">{{ t5GrandTotalHours }}</span>
+                  <span class="type-donut-sub">heures</span>
+                </div>
+              </div>
+            </div>
+            <div class="type-donut-legend">
+              <div class="type-legend-item" *ngFor="let r of t5ByTheme">
+                <span class="type-legend-dot" [style.background]="r.color"></span>
+                <span class="type-legend-label" [title]="r.theme">{{ r.theme }}</span>
+                <span class="type-legend-count">{{ r.hours }} h</span>
+                <span class="type-legend-pct">{{ r.pct }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barres horizontales par thème / sous-thème -->
+          <div class="hbar-section" *ngIf="t5Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t5Rows; let i = index">
+              <div class="hbar-label-long">
+                <span class="t5-label-main" [title]="r.theme">{{ r.theme }}</span>
+                <span class="t5-label-sub">{{ r.subTheme }}</span>
+              </div>
+              <div class="hbar-track">
+                <div class="hbar-fill" [style.width]="t5BarW(r.totalHours)"
+                     [style.background]="THEME_COLORS[i % THEME_COLORS.length]"></div>
+              </div>
+              <span class="hbar-count">{{ r.totalHours }} h</span>
+            </div>
+          </div>
+
+          <!-- Tableau détaillé -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Thème</th>
+                  <th>Sous-thème</th>
+                  <th class="col-num">Nb sous-modules</th>
+                  <th class="col-num">Total heures</th>
+                  <th class="col-num">Moy. heures</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t5Rows.length === 0">
+                  <td colspan="5" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t5Rows; let i = index">
+                  <td class="col-label">
+                    <span class="license-dot" [style.background]="THEME_COLORS[i % THEME_COLORS.length]"></span>
+                    {{ r.theme }}
+                  </td>
+                  <td>{{ r.subTheme }}</td>
+                  <td class="col-num">{{ r.count }}</td>
+                  <td class="col-num">{{ r.totalHours }} h</td>
+                  <td class="col-num col-avg">{{ r.avgHours }} h</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t5Rows.length > 0">
+                <tr>
+                  <td class="foot-label" colspan="2">TOTAL</td>
+                  <td class="col-num">{{ t5GrandTotalCount }}</td>
+                  <td class="col-num">{{ t5GrandTotalHours }} h</td>
+                  <td class="col-num">{{ t5AvgGlobal }} h</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 6 — Par agrément centre
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 6 — Par agrément centre
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Sous-modules par agrément centre</span>
+              <span class="badge-count">{{ t6Rows.length }} agrément(s) centre</span>
+            </div>
+            <button *ngIf="hasActiveF6" class="btn-reset" type="button" (click)="resetF6()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>De</label>
+              <select [(ngModel)]="f6.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl filter-ctrl-year">
+              <label>À</label>
+              <select [(ngModel)]="f6.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f6.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type de formation</label>
+              <select [(ngModel)]="f6.formationType">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Barres horizontales -->
+          <div class="hbar-section" *ngIf="t6Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t6Rows">
+              <div class="hbar-label" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-blue" [style.width]="t6BarW(r.total)" [title]="r.total + ' sous-modules'"></div>
+              </div>
+              <div class="hbar-val">{{ r.total }}</div>
+            </div>
+          </div>
+
+          <!-- Tableau -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Agrément centre</th>
+                  <th class="col-num col-accepted">Accepté</th>
+                  <th class="col-num col-refused">Refusé</th>
+                  <th class="col-num col-received">En cours</th>
+                  <th class="col-num col-pending">En attente</th>
+                  <th class="col-num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t6Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t6Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted" *ngIf="r.accepted > 0">{{ r.accepted }}</span>
+                    <span *ngIf="r.accepted === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-refused" *ngIf="r.refused > 0">{{ r.refused }}</span>
+                    <span *ngIf="r.refused === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-received" *ngIf="r.received > 0">{{ r.received }}</span>
+                    <span *ngIf="r.received === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-pending" *ngIf="r.pending > 0">{{ r.pending }}</span>
+                    <span *ngIf="r.pending === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num col-total-val">{{ r.total }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t6Rows.length > 1">
+                <tr class="total-row">
+                  <td class="foot-label">TOTAL</td>
+                  <td class="col-num">{{ t6Total.accepted || '—' }}</td>
+                  <td class="col-num">{{ t6Total.refused  || '—' }}</td>
+                  <td class="col-num">{{ t6Total.received || '—' }}</td>
+                  <td class="col-num">{{ t6Total.pending  || '—' }}</td>
+                  <td class="col-num">{{ t6Total.total }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+      </ng-container>
+    </main>
+  </div>
+</div>

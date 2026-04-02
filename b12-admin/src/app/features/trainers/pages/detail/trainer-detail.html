@@ -1,0 +1,182 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/trainers">Formateur·trices</a><span class="crumb-sep">›</span><span>Détail</span>
+          </div>
+          <div class="title-row">
+            <h1>Formateur·trice</h1>
+            <span class="pill" [ngClass]="currentArchived ? 'pill-archived' : 'pill-active'">
+              {{ currentArchived ? 'Archivé' : 'Actif' }}
+            </span>
+          </div>
+        </div>
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/trainers">Retour</a>
+          <button *hasRole="['ADMIN','USER']" type="button" class="btn-primary" (click)="submit()" [disabled]="loading">
+            {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div *ngIf="success" class="success">{{ success }}</div>
+          <div *ngIf="error"   class="error">{{ error }}</div>
+
+          <!-- =============================================
+               INFORMATIONS PERSONNELLES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Informations personnelles</h2>
+            <p class="muted">Les champs marqués * sont obligatoires.</p>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Prénom *</label>
+              <input type="text" formControlName="firstName" maxlength="100" />
+              <div class="field-error" *ngIf="form.controls.firstName.touched && form.controls.firstName.invalid">
+                Le prénom est obligatoire.
+              </div>
+            </div>
+
+            <div class="row">
+              <label>Nom *</label>
+              <input type="text" formControlName="lastName" maxlength="100" />
+              <div class="field-error" *ngIf="form.controls.lastName.touched && form.controls.lastName.invalid">
+                Le nom est obligatoire.
+              </div>
+            </div>
+
+            <div class="row">
+              <label>E-mail</label>
+              <input type="email" formControlName="email" maxlength="180" />
+              <div class="field-error" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+                L'adresse e-mail n'est pas valide.
+              </div>
+            </div>
+
+            <div class="row">
+              <label>Numéro de téléphone</label>
+              <input type="text" formControlName="phone" maxlength="50" placeholder="Ex: +32 81 00 00 00" (blur)="onPhoneBlur($event)" />
+            </div>
+
+            <div class="row">
+              <label>Numéro de phytolicence</label>
+              <input type="text" formControlName="phytolicenceNumber" maxlength="10" placeholder="Ex: 12.A.12345 ou 12.1.12345" (input)="onPhytolicenceInput($event)" />
+              <small class="muted">Format : 2 chiffres · 1 lettre ou chiffre · 5 chiffres (ex: 12.A.12345 ou 12.1.12345) — les points s'insèrent automatiquement</small>
+            </div>
+          </div>
+
+          <!-- =============================================
+               AGRÉMENT FORMATION
+          ============================================== -->
+          <div class="section-head">
+            <h2>Agrément formation</h2>
+          </div>
+
+          <div class="row">
+            <label>Agréments formation associés</label>
+            <div class="checkbox-list" *ngIf="trainingAccreditations.length > 0; else noAccreditations">
+              <label class="checkbox-item" *ngFor="let ta of trainingAccreditations">
+                <input
+                  type="checkbox"
+                  [checked]="isAccreditationSelected(ta.id!)"
+                  (change)="toggleAccreditation(ta.id!)"
+                />
+                {{ ta.accreditationNumber ? ta.accreditationNumber + ' — ' : '' }}{{ ta.title }}
+              </label>
+            </div>
+            <ng-template #noAccreditations>
+              <span class="muted">Aucun agrément disponible.</span>
+            </ng-template>
+          </div>
+
+          <!-- =============================================
+               ORGANISMES PARTENAIRES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Organismes partenaires</h2>
+          </div>
+
+          <div class="row">
+            <div class="checkbox-list" *ngIf="organisms.length > 0; else noOrganisms">
+              <label class="checkbox-item" *ngFor="let o of organisms">
+                <input
+                  type="checkbox"
+                  [checked]="isOrganismSelected(o.id!)"
+                  (change)="toggleOrganism(o.id!)"
+                />
+                {{ o.name }}
+                <span class="muted" *ngIf="o.abbreviation"> ({{ o.abbreviation }})</span>
+              </label>
+            </div>
+            <ng-template #noOrganisms>
+              <span class="muted">Aucun organisme disponible.</span>
+            </ng-template>
+          </div>
+
+          <!-- =============================================
+               COMMENTAIRE
+          ============================================== -->
+          <div class="section-head">
+            <h2>Commentaire</h2>
+          </div>
+
+          <div class="row">
+            <textarea formControlName="comment" rows="4" maxlength="1000"></textarea>
+          </div>
+
+          <!-- =============================================
+               HISTORIQUE
+          ============================================== -->
+          <div class="section-head" *ngIf="createdAt || updatedAt">
+            <h2>Historique</h2>
+          </div>
+
+          <div class="grid-2 meta-grid" *ngIf="createdAt || updatedAt">
+            <div class="meta-row" *ngIf="createdAt">
+              <span class="meta-label">Créé le</span>
+              <span class="meta-value">{{ formatDate(createdAt) }}</span>
+            </div>
+            <div class="meta-row" *ngIf="createdBy">
+              <span class="meta-label">Créé par</span>
+              <span class="meta-value">{{ createdBy }}</span>
+            </div>
+            <div class="meta-row" *ngIf="updatedAt">
+              <span class="meta-label">Modifié le</span>
+              <span class="meta-value">{{ formatDate(updatedAt) }}</span>
+            </div>
+            <div class="meta-row" *ngIf="updatedBy">
+              <span class="meta-label">Modifié par</span>
+              <span class="meta-value">{{ updatedBy }}</span>
+            </div>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button *hasRole="['ADMIN','USER']" type="button" class="btn-primary" (click)="submit()" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+            <a class="btn-secondary" routerLink="/trainers">Annuler</a>
+            <button *hasRole="['ADMIN','USER']" type="button" class="btn-secondary" (click)="toggleArchive()" [disabled]="loading">
+              {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+            </button>
+            <button *hasRole="['ADMIN']" type="button" class="btn-danger" (click)="delete()" [disabled]="loading">
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

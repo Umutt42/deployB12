@@ -1,0 +1,775 @@
+/* =====================================================
+   CREATE PAGE — STYLES PARTAGÉS
+   Importé par chaque page de création via @import.
+===================================================== */
+
+/* ===================================================
+   PAGE / LAYOUT
+=================================================== */
+
+.app-shell {
+  min-height: 100vh;
+  background: #f3f5f7;
+}
+
+.content-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 20px;
+  padding: 0 24px 18px 0;
+  align-items: stretch;
+  width: 100%;
+}
+
+.main {
+  background: transparent;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #6c7a86;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2a33;
+}
+
+/* ===================================================
+   CARD
+=================================================== */
+
+.table-card {
+  background: #ffffff;
+  border: 1px solid #d7dfe6;
+  border-radius: 10px;
+  overflow: visible;
+  min-width: 0;
+  position: relative;
+}
+
+/* ===================================================
+   CARD DÉTAIL
+=================================================== */
+
+.form-card {
+  background: #fff;
+  border: 1px solid #d7dfe6;
+  border-radius: 10px;
+  padding: 18px;
+  min-width: 0;
+}
+
+/* ===================================================
+   FORMULAIRE
+=================================================== */
+
+.form {
+  padding: 16px;
+  max-width: 860px;
+  width: 100%;
+}
+
+.row {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.row label {
+  font-weight: 700;
+  color: #1f2a33;
+}
+
+.row input,
+.row textarea,
+.row select {
+  border: 1px solid #d6dde6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.row input:focus,
+.row textarea:focus,
+.row select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.row select[multiple] {
+  min-height: 140px;
+  padding: 8px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #6c7a86;
+  margin-top: 4px;
+}
+
+/* ===================================================
+   SECTIONS AVEC TITRE
+=================================================== */
+
+.section-head {
+  margin: 16px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f6;
+}
+
+.section-head:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2a33;
+}
+
+.section-head .muted {
+  font-size: 12px;
+  color: #6c7a86;
+  margin: 3px 0 0;
+}
+
+/* ===================================================
+   GRILLE 2 COLONNES
+=================================================== */
+
+.grid-2 {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+@media (min-width: 700px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 18px;
+  }
+}
+
+/* ===================================================
+   CASES À COCHER
+=================================================== */
+
+.grid-checkboxes {
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.checkbox-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.checkbox-row span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2a33;
+}
+
+/* ===================================================
+   CHAMP DATE (texte + picker natif superposé)
+=================================================== */
+
+.date-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-field input[type='text'] {
+  flex: 1;
+  padding-right: 36px;
+}
+
+.date-picker {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 36px;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* ===================================================
+   LISTES DE SÉLECTION (multi-list et checkbox-list)
+=================================================== */
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #d6dde6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+}
+
+.checkbox-list.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  max-height: none;
+  gap: 10px 20px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkbox-item input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
+.multi-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid #d6dde6;
+  border-radius: 8px;
+  background: #ffffff;
+  min-height: 120px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.multi-list li {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+
+.multi-list li:hover {
+  background: #f2f6fa;
+}
+
+.multi-list li.selected {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.multi-list li.selected:hover {
+  background: #1d4ed8;
+}
+
+/* ===================================================
+   ACTIONS
+=================================================== */
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f6;
+  flex-wrap: wrap;
+}
+
+/* ===================================================
+   BOUTONS
+=================================================== */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: 1px solid var(--primary-hover);
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary:hover    { filter: brightness(0.95); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #cfd9e2;
+  background: #e7edf3;
+  color: #1f2a33;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-secondary:hover    { background: #dde7ef; }
+.btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: 1px solid #ffd0d0;
+  background: #fff5f5;
+  color: #9b1c1c;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-danger:hover    { background: #ffe8e8; }
+.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border: 1px solid #cfd9e2;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  color: #2a3b47;
+  text-decoration: none;
+}
+
+.btn-outline:hover { background: #f3f7fb; }
+.btn-outline:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 18px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+  color: #6c7a86;
+  text-decoration: none;
+}
+
+.btn-ghost:hover { background: #f3f7fb; }
+
+/* ===================================================
+   MESSAGES
+=================================================== */
+
+.error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ffe8e8;
+  border: 1px solid #ffbcbc;
+  color: #9b1c1c;
+  font-size: 13px;
+}
+
+.success {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ecfdf3;
+  border: 1px solid #c6f6d5;
+  color: #065f46;
+  font-size: 13px;
+}
+
+.field-error {
+  font-size: 12px;
+  color: #9b1c1c;
+  margin-top: 6px;
+}
+
+/* ===================================================
+   AUTOCOMPLETE
+=================================================== */
+
+.autocomplete {
+  position: relative;
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid #d7dfe6;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+  max-height: 240px;
+  overflow: auto;
+}
+
+.suggestions li button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.suggestions li button:hover { background: #f2f6fa; }
+
+/* ===================================================
+   BATCH MULTI-AJOUT
+=================================================== */
+
+.batch-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.batch-title {
+  color: #1f2a33;
+  font-size: 14px;
+}
+
+.batch-list {
+  display: grid;
+  gap: 14px;
+}
+
+.batch-item,
+.accreditation-item {
+  border: 2px solid #c8d8e4;
+  background: #f4f8fb;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-number {
+  font-weight: 800;
+  color: #1f2a33;
+}
+
+/* Pills d'état */
+.pill {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d7dfe6;
+  background: #f2f6fa;
+  color: #1f2a33;
+}
+
+.pill-saving {
+  background: #eef5ff;
+  border-color: #cfe1ff;
+  color: #1d4ed8;
+}
+
+.pill-success {
+  background: #ecfdf3;
+  border-color: #c6f6d5;
+  color: #065f46;
+}
+
+.pill-error {
+  background: #ffe8e8;
+  border-color: #ffbcbc;
+  color: #9b1c1c;
+}
+
+/* ===================================================
+   IMPORT DROPDOWN BUTTON
+=================================================== */
+
+.import-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.import-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #d7dfe6;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+  padding: 10px 6px 6px;
+  min-width: 160px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.import-dropdown:hover .import-menu,
+.import-dropdown.open .import-menu {
+  display: flex;
+}
+
+.import-menu button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2a33;
+  white-space: nowrap;
+}
+
+.import-menu button:hover {
+  background: #f2f6fa;
+}
+
+.import-menu button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Barre de recherche dans les listes ─── */
+.list-search {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #d6dde6;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 0 10px 0 32px;
+  font-size: 13px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236c7a86' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+  box-sizing: border-box;
+}
+.list-search:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.list-search + .multi-list,
+.list-search + .checkbox-list {
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Bouton supprimer ligne */
+.icon-danger {
+  height: 34px;
+  width: 42px;
+  border-radius: 10px;
+  border: 1px solid #ffd0d0;
+  background: #fff5f5;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.icon-danger:hover    { background: #ffe8e8; }
+.icon-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ===================================================
+   TITLE ROW (h1 + pill statut)
+=================================================== */
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.head-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ===================================================
+   STATUS PILLS
+=================================================== */
+
+.pill {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d7dfe6;
+  background: #f2f6fa;
+  color: #1f2a33;
+}
+
+.pill-active {
+  background: #ecfdf3;
+  border-color: #c6f6d5;
+  color: #065f46;
+}
+
+.pill-archived {
+  background: #ffe8e8;
+  border-color: #ffbcbc;
+  color: #9b1c1c;
+}
+
+/* ===================================================
+   SECTION HEAD ROW
+=================================================== */
+
+.first-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.section-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===================================================
+   READONLY VALUE
+=================================================== */
+
+.readonly-value {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2a33;
+}
+
+/* ===================================================
+   EMPTY HINT
+=================================================== */
+
+.empty-hint {
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px dashed #d7dfe6;
+  border-radius: 8px;
+  text-align: center;
+  color: #6c7a86;
+  font-size: 13px;
+}
+
+/* ===================================================
+   METADATA GRID
+=================================================== */
+
+.meta-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: #6c7a86;
+  font-weight: 700;
+}
+
+.meta-value {
+  font-size: 13px;
+  color: #1f2a33;
+}

@@ -1,0 +1,23 @@
+<div class="login-shell">
+    <div class="card">
+      <h1>B12 Admin</h1>
+      <p class="muted">Connexion</p>
+  
+      <div class="row">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="email" placeholder="admin@b12.local" />
+      </div>
+  
+      <div class="row">
+        <label>Mot de passe</label>
+        <input type="password" [(ngModel)]="password" placeholder="•••••••••" />
+      </div>
+  
+      <div *ngIf="error" class="error">{{ error }}</div>
+  
+      <button class="btn-primary" (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </div>
+  </div>
+  

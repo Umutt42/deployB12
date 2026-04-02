@@ -1,0 +1,38 @@
+@import '../../../../shared/styles/create-page.css';
+
+/* ── Surcharges spécifiques ── */
+
+/* Formulaire plus large que la page create */
+.form { max-width: 980px; }
+
+/* Inputs compacts (hauteur fixe 36px) */
+.row input,
+.row select {
+  height: 36px;
+  padding: 0 12px;
+}
+
+/* Grille 2 col à 880px */
+@media (min-width: 880px) {
+  .grid-2 { grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+}
+
+/* Bouton renouvellement (couleur verte unique à cette page) */
+.btn-renew {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: 1px solid #047857;
+  background: #059669;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-renew:hover    { filter: brightness(0.92); }
+.btn-renew:active   { transform: translateY(1px); }
+.btn-renew:disabled { opacity: 0.6; cursor: not-allowed; }

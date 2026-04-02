@@ -1,0 +1,368 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/sub-modules">Sous-modules</a><span class="crumb-sep">›</span><span>Modifier</span>
+          </div>
+          <div class="title-row">
+            <h1>Modifier le sous-module</h1>
+            <span class="pill" [ngClass]="currentArchived ? 'pill-archived' : 'pill-active'">
+              {{ currentArchived ? 'Archivé' : 'Actif' }}
+            </span>
+          </div>
+        </div>
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/sub-modules">Retour</a>
+          <button *hasRole="['ADMIN','USER']" type="button"
+            [class]="currentArchived ? 'btn-secondary' : 'btn-warning'"
+            (click)="toggleArchive()" [disabled]="loading">
+            {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+          </button>
+          <button *hasRole="['ADMIN','USER']" type="button" class="btn-primary" (click)="submit()" [disabled]="loading">
+            {{ loading ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+          </button>
+          <button *hasRole="['ADMIN']" type="button" class="btn-danger" (click)="delete()" [disabled]="loading">
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div class="meta" *ngIf="createdAt || updatedAt">
+            <div *ngIf="createdAt"><b>Créé :</b> {{ formatDate(createdAt) }}<span class="muted" *ngIf="createdBy"> {{ createdBy }}</span></div>
+            <div *ngIf="updatedAt"><b>Mis à jour :</b> {{ formatDate(updatedAt) }}<span class="muted" *ngIf="updatedBy"> {{ updatedBy }}</span></div>
+          </div>
+          <div *ngIf="success" class="success">{{ success }}</div>
+          <div *ngIf="error"   class="error">{{ error }}</div>
+
+          <!-- =============================================
+               AGRÉMENT
+          ============================================== -->
+          <div class="section-head">
+            <h2>Agrément</h2>
+            <p class="muted">Les champs marqués * sont obligatoires.</p>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Numéro d'agrément</label>
+              <input type="text" formControlName="accreditationNumber" maxlength="60" />
+            </div>
+            <div class="row">
+              <label>Statut de la demande</label>
+              <select formControlName="requestStatus">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <label>Date de réception</label>
+              <div class="date-field">
+                <input type="text" placeholder="JJ/MM/AAAA" [value]="receivedDateDisplay"
+                  (input)="onDateInput('receivedDate', $any($event.target).value)"
+                  (blur)="onDateBlur('receivedDate')" maxlength="10" />
+                <input type="date" class="date-picker" [value]="form.get('receivedDate')?.value || ''"
+                  (change)="onPickerChange('receivedDate', $any($event.target).value)" tabindex="-1" />
+              </div>
+            </div>
+
+            <div class="row"></div>
+
+            <div class="row">
+              <label>Début</label>
+              <div class="date-field">
+                <input type="text" placeholder="JJ/MM/AAAA" [value]="startDateDisplay"
+                  (input)="onDateInput('startDate', $any($event.target).value)"
+                  (blur)="onDateBlur('startDate')" maxlength="10" />
+                <input type="date" class="date-picker" [value]="form.get('startDate')?.value || ''"
+                  (change)="onPickerChange('startDate', $any($event.target).value)" tabindex="-1" />
+              </div>
+            </div>
+
+            <div class="row">
+              <label>Fin</label>
+              <div class="date-field">
+                <input type="text" placeholder="JJ/MM/AAAA" [value]="endDateDisplay"
+                  (input)="onDateInput('endDate', $any($event.target).value)"
+                  (blur)="onDateBlur('endDate')" maxlength="10" />
+                <input type="date" class="date-picker" [value]="form.get('endDate')?.value || ''"
+                  (change)="onPickerChange('endDate', $any($event.target).value)" tabindex="-1" />
+              </div>
+            </div>
+          </div>
+
+          <!-- =============================================
+               AGRÉMENT CENTRE
+          ============================================== -->
+          <div class="section-head">
+            <h2>Agrément centre *</h2>
+          </div>
+
+          <div class="row">
+            <select formControlName="centerAccreditationId">
+              <option [ngValue]="null">-- Sélectionner un agrément centre --</option>
+              <option *ngFor="let ca of centerAccreditationOptions" [ngValue]="ca.id">{{ ca.label }}</option>
+            </select>
+            <div class="field-error" *ngIf="form.controls.centerAccreditationId.touched && form.controls.centerAccreditationId.invalid">
+              L'agrément centre est obligatoire.
+            </div>
+          </div>
+
+          <!-- =============================================
+               ORGANISMES PARTENAIRES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Organismes partenaires</h2>
+            <p class="muted">Agréments centre actifs.</p>
+          </div>
+
+          <div class="row">
+            <ng-container *ngIf="centerAccreditationOptions.length > 0; else noPartners">
+              <input type="text" class="trainer-search" placeholder="Rechercher un agrément centre..."
+                [(ngModel)]="partnerSearch" [ngModelOptions]="{standalone: true}" />
+              <div class="checkbox-list">
+                <ng-container *ngIf="filteredPartners.length > 0; else noPartnerMatch">
+                  <label class="checkbox-item" *ngFor="let ca of filteredPartners">
+                    <input type="checkbox"
+                      [checked]="isIdSelected('partnerAccreditationIds', ca.id)"
+                      (change)="toggleId('partnerAccreditationIds', ca.id)" />
+                    {{ ca.label }}
+                  </label>
+                </ng-container>
+                <ng-template #noPartnerMatch><span class="muted">Aucun résultat pour « {{ partnerSearch }} ».</span></ng-template>
+              </div>
+            </ng-container>
+            <ng-template #noPartners><span class="muted">Aucun agrément centre actif disponible.</span></ng-template>
+          </div>
+
+          <!-- =============================================
+               TITRE
+          ============================================== -->
+          <div class="section-head">
+            <h2>Titre du sous-module *</h2>
+          </div>
+
+          <div class="row">
+            <input type="text" formControlName="title" />
+            <div class="field-error" *ngIf="form.controls.title.touched && form.controls.title.invalid">Le titre est obligatoire.</div>
+          </div>
+
+          <!-- =============================================
+               TYPES DE PHYTOLICENCES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Types de phytolicences</h2>
+          </div>
+
+          <div class="row">
+            <div class="checkbox-list horizontal" *ngIf="licenseTypes.length > 0; else noLt">
+              <label class="checkbox-item" *ngFor="let lt of licenseTypes">
+                <input type="checkbox"
+                  [checked]="isIdSelected('licenseTypeIds', lt.id)"
+                  (change)="toggleId('licenseTypeIds', lt.id)" />
+                <span class="badge-code">{{ lt.code }}</span>
+              </label>
+            </div>
+            <ng-template #noLt><span class="muted">Aucun type de phytolicence disponible.</span></ng-template>
+          </div>
+
+          <!-- =============================================
+               PUBLIC CIBLE
+          ============================================== -->
+          <div class="section-head">
+            <h2>Public cible</h2>
+          </div>
+
+          <div class="row">
+            <textarea formControlName="publicCible" rows="4"></textarea>
+          </div>
+
+          <!-- =============================================
+               TYPE DE FORMATION
+          ============================================== -->
+          <div class="section-head">
+            <h2>Type de formation</h2>
+          </div>
+
+          <div class="grid-2 grid-checkboxes">
+            <div class="row">
+              <select formControlName="trainingType">
+                <option value="">-- Sélectionner --</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+            <div class="row">
+              <label class="checkbox-row">
+                <input type="checkbox" formControlName="subsidized" />
+                <span>Subventionné</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- =============================================
+               FORMATEUR·TRICES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Formateur·trices</h2>
+          </div>
+
+          <div class="row">
+            <input
+              *ngIf="trainers.length > 0"
+              type="text"
+              class="trainer-search"
+              placeholder="Rechercher un·e formateur·trice..."
+              [(ngModel)]="trainerSearch"
+              [ngModelOptions]="{standalone: true}"
+            />
+            <div class="checkbox-list" *ngIf="trainers.length > 0; else noTrainers">
+              <ng-container *ngIf="filteredTrainers.length > 0; else noMatch">
+                <label class="checkbox-item" *ngFor="let tr of filteredTrainers">
+                  <input type="checkbox"
+                    [checked]="isIdSelected('trainerIds', tr.id!)"
+                    (change)="toggleId('trainerIds', tr.id!)" />
+                  {{ tr.firstName }} {{ tr.lastName }}
+                  <span class="muted" *ngIf="tr.email"> · {{ tr.email }}</span>
+                </label>
+              </ng-container>
+              <ng-template #noMatch><span class="muted">Aucun résultat pour « {{ trainerSearch }} ».</span></ng-template>
+            </div>
+            <ng-template #noTrainers><span class="muted">Aucun formateur disponible.</span></ng-template>
+            <button type="button" class="trainer-add-btn" (click)="openTrainerModal()">+ Créer un·e formateur·trice</button>
+          </div>
+
+          <!-- =============================================
+               THÉMATIQUES ET SOUS-THÈMES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Thématiques et sous-thèmes</h2>
+          </div>
+
+          <div class="row">
+            <div class="checkbox-list theme-tree" *ngIf="themes.length > 0; else noThemes">
+              <ng-container *ngFor="let t of themes">
+                <label class="checkbox-item theme-item">
+                  <input type="checkbox"
+                    [checked]="isIdSelected('themeIds', t.id!)"
+                    (change)="toggleId('themeIds', t.id!)" />
+                  <strong>{{ t.name }}</strong>
+                </label>
+                <ng-container *ngIf="isIdSelected('themeIds', t.id!) && getSubThemesForTheme(t.id!).length > 0">
+                  <div class="sub-theme-row" *ngFor="let st of getSubThemesForTheme(t.id!)">
+                    <label class="checkbox-item sub-theme-item">
+                      <input type="checkbox"
+                        [checked]="isIdSelected('subThemeIds', st.id!)"
+                        (change)="toggleId('subThemeIds', st.id!)" />
+                      {{ st.name }}
+                    </label>
+                    <div class="minutes-field" *ngIf="isIdSelected('subThemeIds', st.id!)">
+                      <input
+                        type="number" min="0" step="1" placeholder="0"
+                        class="minutes-input"
+                        [value]="subThemeMinutes[st.id!]"
+                        (input)="onSubThemeMinutes(st.id!, $event)"
+                      />
+                      <span class="minutes-label">min</span>
+                    </div>
+                  </div>
+                </ng-container>
+              </ng-container>
+            </div>
+            <ng-template #noThemes><span class="muted">Aucune thématique disponible.</span></ng-template>
+          </div>
+
+          <!-- =============================================
+               DURÉE ET POINTS
+          ============================================== -->
+          <div class="section-head">
+            <h2>Durée et points de formation</h2>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Durée (heures)</label>
+              <input type="number" formControlName="durationHours" min="0" step="0.5" />
+            </div>
+            <div class="row">
+              <label>Prix (€)</label>
+              <input type="number" formControlName="price" min="0" step="0.01" />
+            </div>
+            <div class="row">
+              <label>Points de formation</label>
+              <input type="number" formControlName="trainingPoints" min="0" step="1" />
+            </div>
+          </div>
+
+          <!-- =============================================
+               COMMENTAIRE
+          ============================================== -->
+          <div class="section-head">
+            <h2>Commentaire</h2>
+          </div>
+
+          <div class="row">
+            <textarea formControlName="comment" rows="8"></textarea>
+          </div>
+
+          <!-- =============================================
+               AUDIT
+          ============================================== -->
+          <div class="audit-info" *ngIf="createdAt || updatedAt">
+            <span *ngIf="createdAt">Créé le {{ formatDate(createdAt) }}<span *ngIf="createdBy"> par {{ createdBy }}</span></span>
+            <span *ngIf="updatedAt"> · Modifié le {{ formatDate(updatedAt) }}<span *ngIf="updatedBy"> par {{ updatedBy }}</span></span>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button *hasRole="['ADMIN','USER']" type="button" class="btn-primary" (click)="submit()" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+            </button>
+
+            <button *hasRole="['ADMIN','USER']" type="button"
+              [class]="currentArchived ? 'btn-secondary' : 'btn-warning'"
+              (click)="toggleArchive()" [disabled]="loading">
+              {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+            </button>
+
+            <button *hasRole="['ADMIN']" type="button" class="btn-danger" (click)="delete()" [disabled]="loading">
+              Supprimer
+            </button>
+
+            <a class="btn-secondary" routerLink="/sub-modules">Annuler</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL FORMATEUR -->
+<div class="modal-overlay" *ngIf="showTrainerModal" (click)="closeTrainerModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <h3 class="modal-title">Ajouter un·e formateur·trice</h3>
+    <div *ngIf="trainerModalError" class="error">{{ trainerModalError }}</div>
+    <div class="row"><label>Prénom *</label><input type="text" [(ngModel)]="newTrainer.firstName" maxlength="100" placeholder="Ex: Marie" /></div>
+    <div class="row"><label>Nom *</label><input type="text" [(ngModel)]="newTrainer.lastName" maxlength="100" placeholder="Ex: Dupont" /></div>
+    <div class="row"><label>E-mail</label><input type="email" [(ngModel)]="newTrainer.email" maxlength="180" placeholder="Ex: marie@example.com" /></div>
+    <div class="row"><label>Téléphone</label><input type="text" [(ngModel)]="newTrainer.phone" maxlength="50" placeholder="Ex: +32 81 00 00 00" /></div>
+    <div class="row"><label>N° phytolicence</label><input type="text" [(ngModel)]="newTrainer.phytolicenceNumber" maxlength="11" placeholder="Ex: 123.A.12345" /></div>
+    <div class="row"><label>Commentaire</label><textarea [(ngModel)]="newTrainer.comment" rows="3" maxlength="1000" placeholder="Remarques..."></textarea></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-primary" (click)="saveNewTrainer()" [disabled]="trainerModalLoading">
+        {{ trainerModalLoading ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+      <button type="button" class="btn-secondary" (click)="closeTrainerModal()">Annuler</button>
+    </div>
+  </div>
+</div>

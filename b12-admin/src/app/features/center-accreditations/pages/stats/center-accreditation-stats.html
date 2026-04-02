@@ -1,0 +1,650 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main" #statsContent>
+
+      <!-- ── En-tête ── -->
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a routerLink="/dashboard">Accueil</a> \
+            <a routerLink="/center-accreditations">Agréments centres</a> \
+            Statistiques
+          </div>
+          <h1>Statistiques — Agréments centres</h1>
+        </div>
+
+        <div class="export-actions" *ngIf="!loading && !error">
+          <span class="export-label">Exporter :</span>
+          <button class="btn-export" type="button" (click)="exportExcel()" [disabled]="exporting">Excel</button>
+          <button class="btn-export btn-export-pdf" type="button" (click)="exportPdf()" [disabled]="exporting">
+            {{ exporting ? 'Génération...' : 'PDF' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Skeleton ── -->
+      <ng-container *ngIf="loading">
+        <div class="skeleton-bar" style="width:160px; margin-bottom:12px"></div>
+        <div class="kpi-grid">
+          <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5]">
+            <div class="sk sk-short"></div>
+            <div class="sk sk-tall"></div>
+          </div>
+        </div>
+        <div class="skeleton-bar" style="width:200px; margin-top:32px; margin-bottom:12px"></div>
+        <div class="skeleton-card" style="height:260px"></div>
+      </ng-container>
+
+      <!-- ── Erreur ── -->
+      <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+      <ng-container *ngIf="!loading && !error">
+
+        <!-- ════════════════════════════════════════════
+             KPI CARDS
+             ════════════════════════════════════════════ -->
+        <div class="section-title">Vue d'ensemble</div>
+        <div class="kpi-grid">
+
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Total agréments</span>
+                <span class="kpi-value kpi-blue-val">{{ kpiTotal }}</span>
+                <span class="kpi-sub">agréments actifs</span>
+              </div>
+              <div class="kpi-icon kpi-icon-blue">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Acceptés</span>
+                <span class="kpi-value kpi-green-val">{{ kpiAccepted }}</span>
+                <span class="kpi-sub">{{ kpiAcceptedPct }} du total</span>
+              </div>
+              <div class="kpi-icon kpi-icon-green">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-red">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">Refusés</span>
+                <span class="kpi-value kpi-red-val">{{ kpiRefused }}</span>
+                <span class="kpi-sub">agréments refusés</span>
+              </div>
+              <div class="kpi-icon kpi-icon-red">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">En cours</span>
+                <span class="kpi-value kpi-orange-val">{{ kpiReceived }}</span>
+                <span class="kpi-sub">dossiers reçus</span>
+              </div>
+              <div class="kpi-icon kpi-icon-orange">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-card-row">
+              <div class="kpi-texts">
+                <span class="kpi-label">En attente</span>
+                <span class="kpi-value kpi-purple-val">{{ kpiPending }}</span>
+                <span class="kpi-sub">en attente de décision</span>
+              </div>
+              <div class="kpi-icon kpi-icon-purple">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Filtre global Actif / Archivé ── -->
+        <div class="filters-bar" style="margin-bottom: 16px;">
+          <div class="filter-ctrl">
+            <label>Statut</label>
+            <select [(ngModel)]="filterArchived">
+              <option value="active">Actifs</option>
+              <option value="archived">Archivés</option>
+              <option value="all">Les deux</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 1 — Par année / statut
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 1 — Par année et statut
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Répartition annuelle des statuts</span>
+              <span class="badge-count">{{ t1Rows.length }} année(s)</span>
+            </div>
+            <button *ngIf="hasActiveF1" class="btn-reset" type="button" (click)="resetF1()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f1.centerId">
+                <option [ngValue]="null">Tous</option>
+                <option *ngFor="let tc of availableTrainingCenters" [ngValue]="tc.id">{{ tc.name }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Type de formation</label>
+              <select [(ngModel)]="f1.formationType">
+                <option value="">Tous</option>
+                <option value="initial">Initiale</option>
+                <option value="continuous">Continue</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Graphique — barres empilées par année -->
+          <div class="stacked-chart" *ngIf="t1Rows.length > 0">
+            <div class="stacked-legend">
+              <span class="stacked-dot stacked-dot-accepted"></span><span class="stacked-lbl">Accepté</span>
+              <span class="stacked-dot stacked-dot-refused"></span><span class="stacked-lbl">Refusé</span>
+              <span class="stacked-dot stacked-dot-received"></span><span class="stacked-lbl">En cours</span>
+              <span class="stacked-dot stacked-dot-pending"></span><span class="stacked-lbl">En attente</span>
+            </div>
+            <div class="stacked-rows">
+              <div class="stacked-row" *ngFor="let r of t1Rows">
+                <div class="stacked-year">{{ r.label }}</div>
+                <div class="stacked-bar-track">
+                  <div class="stacked-seg stacked-seg-accepted" [style.width]="t1SegW(r.accepted, r.total)" [title]="'Acceptés : ' + r.accepted"></div>
+                  <div class="stacked-seg stacked-seg-refused"  [style.width]="t1SegW(r.refused,   r.total)" [title]="'Refusés : '  + r.refused"></div>
+                  <div class="stacked-seg stacked-seg-received" [style.width]="t1SegW(r.received,  r.total)" [title]="'En cours : ' + r.received"></div>
+                  <div class="stacked-seg stacked-seg-pending"  [style.width]="t1SegW(r.pending,   r.total)" [title]="'En attente : '+ r.pending"></div>
+                </div>
+                <div class="stacked-total">{{ r.total }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tableau -->
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Année</th>
+                  <th class="col-num col-accepted">Accepté</th>
+                  <th class="col-num col-refused">Refusé</th>
+                  <th class="col-num col-received">En cours</th>
+                  <th class="col-num col-pending">En attente</th>
+                  <th class="col-num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t1Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t1Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted" *ngIf="r.accepted > 0">{{ r.accepted }}</span>
+                    <span *ngIf="r.accepted === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-refused" *ngIf="r.refused > 0">{{ r.refused }}</span>
+                    <span *ngIf="r.refused === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-received" *ngIf="r.received > 0">{{ r.received }}</span>
+                    <span *ngIf="r.received === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-pending" *ngIf="r.pending > 0">{{ r.pending }}</span>
+                    <span *ngIf="r.pending === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num col-total">{{ r.total }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t1Rows.length > 1">
+                <tr class="total-row">
+                  <td>TOTAL</td>
+                  <td class="col-num">{{ t1Total.accepted }}</td>
+                  <td class="col-num">{{ t1Total.refused }}</td>
+                  <td class="col-num">{{ t1Total.received }}</td>
+                  <td class="col-num">{{ t1Total.pending }}</td>
+                  <td class="col-num col-total">{{ t1Total.total }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 2 — Par centre de formation
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 2 — Par centre de formation
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Agréments par centre de formation</span>
+              <span class="badge-count">{{ t2Rows.length }} centre(s)</span>
+            </div>
+            <button *ngIf="hasActiveF2" class="btn-reset" type="button" (click)="resetF2()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>De</label>
+              <select [(ngModel)]="f2.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>À</label>
+              <select [(ngModel)]="f2.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f2.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Barres horizontales -->
+          <div class="hbar-section" *ngIf="t2Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t2Rows">
+              <div class="hbar-label" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-blue" [style.width]="t2BarW(r.total)" [title]="r.total + ' agréments'"></div>
+              </div>
+              <div class="hbar-val">{{ r.total }}</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Centre de formation</th>
+                  <th class="col-num col-accepted">Accepté</th>
+                  <th class="col-num col-refused">Refusé</th>
+                  <th class="col-num col-received">En cours</th>
+                  <th class="col-num col-pending">En attente</th>
+                  <th class="col-num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t2Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t2Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted" *ngIf="r.accepted > 0">{{ r.accepted }}</span>
+                    <span *ngIf="r.accepted === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-refused" *ngIf="r.refused > 0">{{ r.refused }}</span>
+                    <span *ngIf="r.refused === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-received" *ngIf="r.received > 0">{{ r.received }}</span>
+                    <span *ngIf="r.received === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-pending" *ngIf="r.pending > 0">{{ r.pending }}</span>
+                    <span *ngIf="r.pending === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num col-total">{{ r.total }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t2Rows.length > 1">
+                <tr class="total-row">
+                  <td>TOTAL</td>
+                  <td class="col-num">{{ t2Total.accepted }}</td>
+                  <td class="col-num">{{ t2Total.refused }}</td>
+                  <td class="col-num">{{ t2Total.received }}</td>
+                  <td class="col-num">{{ t2Total.pending }}</td>
+                  <td class="col-num col-total">{{ t2Total.total }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 3 — Par centre pilote
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 3 — Par centre pilote
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Agréments par centre pilote</span>
+              <span class="badge-count">{{ t3Rows.length }} centre(s) pilote(s)</span>
+            </div>
+            <button *ngIf="hasActiveF3" class="btn-reset" type="button" (click)="resetF3()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>De</label>
+              <select [(ngModel)]="f3.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>À</label>
+              <select [(ngModel)]="f3.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f3.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f3.centerId">
+                <option [ngValue]="null">Tous</option>
+                <option *ngFor="let tc of availableTrainingCenters" [ngValue]="tc.id">{{ tc.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Barres horizontales -->
+          <div class="hbar-section" *ngIf="t3Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t3Rows">
+              <div class="hbar-label" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-purple" [style.width]="t3BarW(r.total)" [title]="r.total + ' agréments'"></div>
+              </div>
+              <div class="hbar-val">{{ r.total }}</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Centre pilote</th>
+                  <th class="col-num col-accepted">Accepté</th>
+                  <th class="col-num col-refused">Refusé</th>
+                  <th class="col-num col-received">En cours</th>
+                  <th class="col-num col-pending">En attente</th>
+                  <th class="col-num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t3Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t3Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted" *ngIf="r.accepted > 0">{{ r.accepted }}</span>
+                    <span *ngIf="r.accepted === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-refused" *ngIf="r.refused > 0">{{ r.refused }}</span>
+                    <span *ngIf="r.refused === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-received" *ngIf="r.received > 0">{{ r.received }}</span>
+                    <span *ngIf="r.received === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-pending" *ngIf="r.pending > 0">{{ r.pending }}</span>
+                    <span *ngIf="r.pending === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num col-total">{{ r.total }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t3Rows.length > 1">
+                <tr class="total-row">
+                  <td>TOTAL</td>
+                  <td class="col-num">{{ t3Total.accepted }}</td>
+                  <td class="col-num">{{ t3Total.refused }}</td>
+                  <td class="col-num">{{ t3Total.received }}</td>
+                  <td class="col-num">{{ t3Total.pending }}</td>
+                  <td class="col-num col-total">{{ t3Total.total }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 4 — Par secteur
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 4 — Par secteur
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Agréments par secteur</span>
+              <span class="badge-count">{{ t4Rows.length }} secteur(s)</span>
+            </div>
+            <button *ngIf="hasActiveF4" class="btn-reset" type="button" (click)="resetF4()">
+              Réinitialiser les filtres
+            </button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="filter-ctrl">
+              <label>De</label>
+              <select [(ngModel)]="f4.yearFrom">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>À</label>
+              <select [(ngModel)]="f4.yearTo">
+                <option value="">—</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Statut</label>
+              <select [(ngModel)]="f4.status">
+                <option value="">Tous</option>
+                <option value="ACCEPTED">Accepté</option>
+                <option value="REFUSED">Refusé</option>
+                <option value="RECEIVED">En cours</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+            <div class="filter-ctrl">
+              <label>Centre de formation</label>
+              <select [(ngModel)]="f4.centerId">
+                <option [ngValue]="null">Tous</option>
+                <option *ngFor="let tc of availableTrainingCenters" [ngValue]="tc.id">{{ tc.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Barres horizontales -->
+          <div class="hbar-section" *ngIf="t4Rows.length > 0">
+            <div class="hbar-row" *ngFor="let r of t4Rows">
+              <div class="hbar-label" [title]="r.label">{{ r.label }}</div>
+              <div class="hbar-track">
+                <div class="hbar-fill hbar-fill-teal" [style.width]="t4BarW(r.total)" [title]="r.total + ' agréments'"></div>
+              </div>
+              <div class="hbar-val">{{ r.total }}</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Secteur</th>
+                  <th class="col-num col-accepted">Accepté</th>
+                  <th class="col-num col-refused">Refusé</th>
+                  <th class="col-num col-received">En cours</th>
+                  <th class="col-num col-pending">En attente</th>
+                  <th class="col-num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t4Rows.length === 0">
+                  <td colspan="6" class="empty-row">Aucune donnée pour ces filtres.</td>
+                </tr>
+                <tr *ngFor="let r of t4Rows">
+                  <td class="col-label">{{ r.label }}</td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted" *ngIf="r.accepted > 0">{{ r.accepted }}</span>
+                    <span *ngIf="r.accepted === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-refused" *ngIf="r.refused > 0">{{ r.refused }}</span>
+                    <span *ngIf="r.refused === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-received" *ngIf="r.received > 0">{{ r.received }}</span>
+                    <span *ngIf="r.received === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-pending" *ngIf="r.pending > 0">{{ r.pending }}</span>
+                    <span *ngIf="r.pending === 0" class="col-zero">—</span>
+                  </td>
+                  <td class="col-num col-total">{{ r.total }}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="t4Rows.length > 1">
+                <tr class="total-row">
+                  <td>TOTAL</td>
+                  <td class="col-num">{{ t4Total.accepted }}</td>
+                  <td class="col-num">{{ t4Total.refused }}</td>
+                  <td class="col-num">{{ t4Total.received }}</td>
+                  <td class="col-num">{{ t4Total.pending }}</td>
+                  <td class="col-num col-total">{{ t4Total.total }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             TABLEAU 5 — Évolution & renouvellement
+             ════════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:36px">
+          Tableau 5 — Évolution annuelle &amp; taux de renouvellement
+        </div>
+
+        <div class="stats-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <span class="card-title">Évolution d'une année à l'autre</span>
+              <span class="badge-count">{{ t5Rows.length }} année(s)</span>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Année</th>
+                  <th class="col-num">Total</th>
+                  <th class="col-num">Évolution total</th>
+                  <th class="col-num col-accepted">Acceptés</th>
+                  <th class="col-num">Évolution acceptés</th>
+                  <th class="col-num">Centres actifs</th>
+                  <th class="col-num">Renouvellements</th>
+                  <th class="col-num">Taux renouv.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="t5Rows.length === 0">
+                  <td colspan="8" class="empty-row">Aucune donnée disponible.</td>
+                </tr>
+                <tr *ngFor="let r of t5Rows">
+                  <td class="col-label">{{ r.year }}</td>
+                  <td class="col-num col-total">{{ r.total }}</td>
+                  <td class="col-num">
+                    <span *ngIf="r.deltaTotal === null" class="col-zero">—</span>
+                    <span *ngIf="r.deltaTotal !== null"
+                          [class.delta-pos]="r.deltaTotal > 0"
+                          [class.delta-neg]="r.deltaTotal < 0">
+                      {{ deltaLabel(r.deltaTotal, r.deltaTotalPct) }}
+                    </span>
+                  </td>
+                  <td class="col-num">
+                    <span class="badge-status badge-accepted">{{ r.accepted }}</span>
+                  </td>
+                  <td class="col-num">
+                    <span *ngIf="r.deltaAccepted === null" class="col-zero">—</span>
+                    <span *ngIf="r.deltaAccepted !== null"
+                          [class.delta-pos]="r.deltaAccepted > 0"
+                          [class.delta-neg]="r.deltaAccepted < 0">
+                      {{ deltaLabel(r.deltaAccepted, r.deltaAcceptedPct) }}
+                    </span>
+                  </td>
+                  <td class="col-num">{{ r.centersCount }}</td>
+                  <td class="col-num">
+                    <span *ngIf="r.deltaTotal === null" class="col-zero">—</span>
+                    <span *ngIf="r.deltaTotal !== null">{{ r.renewedCount }}</span>
+                  </td>
+                  <td class="col-num">
+                    <span [class]="renewalClass(r)">{{ r.renewalRate }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </ng-container>
+
+    </main>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+<header class="topbar">
+  <!-- =========================
+       Left: title + breadcrumb
+       ========================= -->
+  <div class="left">
+    <div class="title">{{ pageTitle }}</div>
+
+    <div class="breadcrumb" *ngIf="breadcrumb.length">
+      <ng-container *ngFor="let item of breadcrumb; let last = last">
+        <!-- élément cliquable -->
+        <a
+          *ngIf="isClickable(item) && !last"
+          class="crumb link-crumb"
+          [routerLink]="item.url"
+        >
+          {{ item.label }}
+        </a>
+
+        <!-- élément non cliquable / dernier -->
+        <span *ngIf="!isClickable(item) || last" class="crumb">
+          {{ item.label }}
+        </span>
+
+        <span *ngIf="!last" class="sep-crumb">›</span>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- =========================
+       Center: recherche globale
+       ========================= -->
+  <div class="center">
+    <app-global-search></app-global-search>
+  </div>
+
+  <!-- =========================
+       Right: avatar + dropdown
+       ========================= -->
+  <div class="right">
+    <div class="user-menu-wrap">
+      <button class="avatar-btn" (click)="toggleUserMenu()" [class.avatar-btn-open]="showUserMenu">
+        <span class="avatar">{{ initials }}</span>
+        <svg class="avatar-chevron" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+
+      <div class="user-dropdown" *ngIf="showUserMenu">
+        <div class="dropdown-email">{{ userEmail }}</div>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" routerLink="/change-password" (click)="showUserMenu = false">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 7a5 5 0 0 1 9.192-2.674l1.016 1.758A1 1 0 0 1 17.33 7.5H16.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5V8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1.268A5.002 5.002 0 0 1 8 7Zm0 5a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z" clip-rule="evenodd"/></svg>
+          Modifier le mot de passe
+        </a>
+        <a class="dropdown-item dropdown-item-danger" role="button" (click)="logout()">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Zm13.47 4.22a.75.75 0 0 1 1.06 0l2 2a.75.75 0 0 1 0 1.06l-2 2a.75.75 0 1 1-1.06-1.06l.72-.72H8.75a.75.75 0 0 1 0-1.5h8.44l-.72-.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>
+          Déconnexion
+        </a>
+      </div>
+    </div>
+  </div>
+</header>

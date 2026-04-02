@@ -1,0 +1,69 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ─── Styles propres à users ─── */
+
+/* email-cell */
+.email-cell {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* pill: standard variant (roles) */
+.pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f2f6fa;
+  border: 1px solid #d7dfe6;
+  color: #1f2a33;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* actions-cell */
+.actions-cell {
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* btn-mini */
+.btn-mini {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #cfd9e2;
+  background: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-mini:hover { background: #f2f6fa; }
+
+.btn-mini.danger {
+  border-color: #f2b8b5;
+  background: #fff5f5;
+  color: #b42318;
+}
+
+.btn-mini.danger:hover { background: #ffe8e8; }
+
+/* sort inline */
+.sort-inline {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-sort {
+  padding: 0 10px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+/* check column width override */
+.check { width: 36px; }
+
+/* error inline text */
+.error { color: #9b1c1c; }

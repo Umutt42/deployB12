@@ -1,0 +1,33 @@
+@import '../../../../shared/styles/create-page.css';
+
+/* ===================================================
+   CENTER-ACCREDITATION-CREATE — spécifique
+=================================================== */
+
+/* Section header avec bouton à droite */
+.section-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Hint "vide" */
+.empty-hint {
+  padding: 14px;
+  color: #6c7a86;
+  font-size: 13px;
+  font-style: italic;
+  border: 1px dashed #d7dfe6;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* Premier section-head à l'intérieur d'un accreditation-item sans bordure */
+.accreditation-item .section-head:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}

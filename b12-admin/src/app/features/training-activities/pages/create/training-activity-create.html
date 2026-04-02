@@ -1,0 +1,229 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/training-activities">Activités de formation</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter une ou plusieurs activités de formation</h1>
+        </div>
+        <a class="btn-secondary" routerLink="/training-activities">Retour</a>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+
+          <!-- BATCH HEADER -->
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> activité(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter une activité
+            </button>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">{{ error }}</div>
+
+          <!-- LISTE DES ACTIVITÉS -->
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="accreditation-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+
+              <!-- HEADER LIGNE -->
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Activité #{{ i + 1 }}</div>
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving':  rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error':   rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{ rowStates[i]?.status === 'saving'  ? 'Enregistrement...'
+                      : rowStates[i]?.status === 'success' ? 'OK'
+                      : rowStates[i]?.status === 'error'   ? 'Erreur'
+                      : 'Prêt' }}
+                  </span>
+                </div>
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer cette activité"
+                >🗑</button>
+              </div>
+
+              <!-- =============================================
+                   DATES
+              ============================================== -->
+              <div class="section-head">
+                <h2>Dates</h2>
+                <p class="muted">Les champs marqués * sont obligatoires. La date de début détermine les agréments éligibles.</p>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Date de début *</label>
+                  <input type="date" formControlName="startDate" />
+                  <div class="field-error" *ngIf="g.get('startDate')?.touched && g.get('startDate')?.invalid">
+                    La date de début est obligatoire.
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label>Date de fin</label>
+                  <input type="date" formControlName="endDate" />
+                </div>
+              </div>
+
+              <!-- =============================================
+                   AGRÉMENT FORMATION
+              ============================================== -->
+              <div class="section-head">
+                <h2>Agrément formation</h2>
+              </div>
+
+              <div class="row">
+                <select formControlName="trainingAccreditationId" [attr.disabled]="eligibleLoadingPerItem[i] ? true : null">
+                  <option [ngValue]="null">
+                    {{ !g.get('startDate')?.value
+                        ? '-- Choisissez d\'abord une date de début --'
+                        : eligibleLoadingPerItem[i]
+                          ? 'Chargement...'
+                          : eligibleOptionsPerItem[i].length === 0
+                            ? '-- Aucun agrément actif à cette date --'
+                            : '-- Sélectionner un agrément --' }}
+                  </option>
+                  <option *ngFor="let opt of eligibleOptionsPerItem[i]" [ngValue]="opt.id">
+                    {{ opt.label }}
+                  </option>
+                </select>
+                <div class="field-error" *ngIf="g.get('trainingAccreditationId')?.touched && g.get('trainingAccreditationId')?.invalid">
+                  L'agrément formation est obligatoire.
+                </div>
+              </div>
+
+              <!-- =============================================
+                   LIEU
+              ============================================== -->
+              <div class="section-head">
+                <h2>Lieu</h2>
+              </div>
+
+              <div class="batch-item">
+                <div class="grid-2">
+                  <div class="row">
+                    <label>Rue</label>
+                    <input type="text" formControlName="street" maxlength="200" placeholder="Ex: Chaussée de Namur" />
+                  </div>
+                  <div class="row">
+                    <label>Numéro</label>
+                    <input type="text" formControlName="number" maxlength="30" placeholder="Ex: 47" />
+                  </div>
+                  <div class="row">
+                    <label>Code postal</label>
+                    <input type="text" formControlName="postalCode" maxlength="20" placeholder="Ex: 5000" (input)="onPostalCodeInput(i)" />
+                  </div>
+                  <div class="row">
+                    <label>Ville</label>
+                    <input type="text" formControlName="ville" maxlength="200" placeholder="Ex: Namur" />
+                  </div>
+                  <div class="row">
+                    <label>Province</label>
+                    <input type="text" formControlName="province" maxlength="100" placeholder="Ex: Namur" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- =============================================
+                   PRIX
+              ============================================== -->
+              <div class="section-head">
+                <h2>Prix</h2>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Prix membre (€)</label>
+                  <input type="number" formControlName="memberPrice" min="0" step="0.01" placeholder="0.00" />
+                </div>
+
+                <div class="row">
+                  <label>Prix non-membre (€)</label>
+                  <input type="number" formControlName="nonMemberPrice" min="0" step="0.01" placeholder="0.00" />
+                </div>
+              </div>
+
+              <!-- =============================================
+                   INFORMATIONS
+              ============================================== -->
+              <div class="section-head">
+                <h2>Informations</h2>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label class="checkbox-row">
+                    <input type="checkbox" formControlName="online" />
+                    <span>Formation en ligne</span>
+                  </label>
+                </div>
+
+                <div class="row">
+                  <label>Nombre de participants</label>
+                  <input type="number" formControlName="numberOfParticipants" min="0" step="1" placeholder="Ex: 20" />
+                </div>
+
+                <div class="row">
+                  <label class="checkbox-row">
+                    <input type="checkbox" formControlName="phytodama" />
+                    <span>Phytodama</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+
+            </div>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+              Enregistrer &amp; continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/training-activities">Annuler</a>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

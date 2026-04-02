@@ -1,0 +1,224 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/training-activities">Activités de formation</a><span class="crumb-sep">›</span><span>Modifier</span>
+          </div>
+          <div class="title-row">
+            <h1>Modifier l'activité de formation</h1>
+            <span class="pill" [ngClass]="currentArchived ? 'pill-archived' : 'pill-active'">
+              {{ currentArchived ? 'Archivé' : 'Actif' }}
+            </span>
+          </div>
+        </div>
+        <div class="head-actions">
+          <a class="btn-secondary" routerLink="/training-activities">Retour</a>
+          <button *hasRole="['ADMIN','USER']" type="button"
+            [class]="currentArchived ? 'btn-secondary' : 'btn-warning'"
+            (click)="toggleArchive()" [disabled]="loading">
+            {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+          </button>
+          <button *hasRole="['ADMIN','USER']" type="button" class="btn-primary" (click)="submit()" [disabled]="loading">
+            {{ loading ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+          </button>
+          <button *hasRole="['ADMIN']" type="button" class="btn-danger" (click)="delete()" [disabled]="loading">
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+          <div class="meta" *ngIf="createdAt || updatedAt">
+            <div *ngIf="createdAt"><b>Créé :</b> {{ formatDate(createdAt) }}<span class="muted" *ngIf="createdBy"> {{ createdBy }}</span></div>
+            <div *ngIf="updatedAt"><b>Mis à jour :</b> {{ formatDate(updatedAt) }}<span class="muted" *ngIf="updatedBy"> {{ updatedBy }}</span></div>
+          </div>
+          <div *ngIf="success" class="success">{{ success }}</div>
+          <div *ngIf="error"   class="error">{{ error }}</div>
+
+          <!-- =============================================
+               DATES
+          ============================================== -->
+          <div class="section-head">
+            <h2>Dates</h2>
+            <p class="muted">Les champs marqués * sont obligatoires. Modifier la date de début met à jour les agréments éligibles.</p>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Date de début *</label>
+              <div class="date-field">
+                <input type="text" placeholder="JJ/MM/AAAA"
+                  [value]="startDateDisplay"
+                  (input)="onDateInput('startDate', $any($event.target).value)"
+                  (blur)="onDateBlur('startDate')"
+                  maxlength="10" />
+                <input type="date" class="date-picker"
+                  [value]="form.get('startDate')?.value || ''"
+                  (change)="onPickerChange('startDate', $any($event.target).value)"
+                  tabindex="-1" />
+              </div>
+              <div class="field-error" *ngIf="form.controls.startDate.touched && form.controls.startDate.invalid">
+                La date de début est obligatoire.
+              </div>
+            </div>
+
+            <div class="row">
+              <label>Date de fin</label>
+              <div class="date-field">
+                <input type="text" placeholder="JJ/MM/AAAA"
+                  [value]="endDateDisplay"
+                  (input)="onDateInput('endDate', $any($event.target).value)"
+                  (blur)="onDateBlur('endDate')"
+                  maxlength="10" />
+                <input type="date" class="date-picker"
+                  [value]="form.get('endDate')?.value || ''"
+                  (change)="onPickerChange('endDate', $any($event.target).value)"
+                  tabindex="-1" />
+              </div>
+            </div>
+          </div>
+
+          <!-- =============================================
+               AGRÉMENT FORMATION
+          ============================================== -->
+          <div class="section-head">
+            <h2>Agrément formation</h2>
+          </div>
+
+          <div class="row">
+            <select formControlName="trainingAccreditationId" [attr.disabled]="eligibleLoading ? true : null">
+              <option [ngValue]="null">
+                {{ eligibleLoading ? 'Chargement...' : '-- Sélectionner un agrément --' }}
+              </option>
+              <option *ngFor="let opt of eligibleOptions" [ngValue]="opt.id">
+                {{ opt.label }}
+              </option>
+            </select>
+            <div class="field-error" *ngIf="form.controls.trainingAccreditationId.touched && form.controls.trainingAccreditationId.invalid">
+              L'agrément formation est obligatoire.
+            </div>
+          </div>
+
+          <!-- =============================================
+               LIEU
+          ============================================== -->
+          <div class="section-head">
+            <h2>Lieu</h2>
+          </div>
+
+          <div class="batch-item">
+            <div class="grid-2">
+              <div class="row">
+                <label>Rue</label>
+                <input type="text" formControlName="street" maxlength="200" placeholder="Ex: Chaussée de Namur" />
+              </div>
+              <div class="row">
+                <label>Numéro</label>
+                <input type="text" formControlName="number" maxlength="30" placeholder="Ex: 47" />
+              </div>
+              <div class="row">
+                <label>Code postal</label>
+                <input type="text" formControlName="postalCode" maxlength="20" placeholder="Ex: 5000" (input)="onPostalCodeInput()" />
+              </div>
+              <div class="row">
+                <label>Ville</label>
+                <input type="text" formControlName="ville" maxlength="200" placeholder="Ex: Namur" />
+              </div>
+              <div class="row">
+                <label>Province</label>
+                <input type="text" formControlName="province" maxlength="100" placeholder="Ex: Namur" />
+              </div>
+            </div>
+          </div>
+
+          <!-- =============================================
+               INFORMATIONS
+          ============================================== -->
+          <div class="section-head">
+            <h2>Informations</h2>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Nombre de participants</label>
+              <input type="number" formControlName="numberOfParticipants" min="0" step="1" />
+            </div>
+
+            <div class="row">
+              <!-- spacer -->
+            </div>
+
+            <div class="row">
+              <label class="checkbox-row">
+                <input type="checkbox" formControlName="online" />
+                <span>Formation en ligne</span>
+              </label>
+            </div>
+
+            <div class="row">
+              <label class="checkbox-row">
+                <input type="checkbox" formControlName="phytodama" />
+                <span>Phytodama</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- =============================================
+               PRIX
+          ============================================== -->
+          <div class="section-head">
+            <h2>Prix</h2>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>Prix membre (€)</label>
+              <input type="number" formControlName="memberPrice" min="0" step="0.01" />
+            </div>
+
+            <div class="row">
+              <label>Prix non-membre (€)</label>
+              <input type="number" formControlName="nonMemberPrice" min="0" step="0.01" />
+            </div>
+          </div>
+
+          <!-- =============================================
+               AUDIT
+          ============================================== -->
+          <div class="audit-info" *ngIf="createdAt || updatedAt">
+            <span *ngIf="createdAt">Créé le {{ formatDate(createdAt) }}<span *ngIf="createdBy"> par {{ createdBy }}</span></span>
+            <span *ngIf="updatedAt"> · Modifié le {{ formatDate(updatedAt) }}<span *ngIf="updatedBy"> par {{ updatedBy }}</span></span>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button *hasRole="['ADMIN','USER']" type="button" class="btn-primary" (click)="submit()" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+            </button>
+
+            <button *hasRole="['ADMIN','USER']" type="button"
+              [class]="currentArchived ? 'btn-secondary' : 'btn-warning'"
+              (click)="toggleArchive()" [disabled]="loading">
+              {{ currentArchived ? 'Désarchiver' : 'Archiver' }}
+            </button>
+
+            <button *hasRole="['ADMIN']" type="button" class="btn-danger" (click)="delete()" [disabled]="loading">
+              Supprimer
+            </button>
+
+            <a class="btn-secondary" routerLink="/training-activities">Annuler</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

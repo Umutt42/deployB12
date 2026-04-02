@@ -1,0 +1,127 @@
+<aside class="sidebar">
+  <div class="sidebar-search">
+    <input type="text" placeholder="Écrivez ici pour filtrer..." [(ngModel)]="filterText" />
+  </div>
+
+  <div class="section-title">
+    <span>CORDER-PHYTO-LICENSE</span>
+  </div>
+
+  <nav class="menu">
+    <a *ngIf="matches('Tableau de bord')" class="item" routerLink="/dashboard" routerLinkActive="active">
+      Tableau de bord
+    </a>
+
+    <div *ngIf="matches('Types de phytolicences')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/license-types">
+        Types de phytolicences
+        <span class="item-count" *ngIf="counts.counts?.licenseTypesTotal != null">({{ counts.counts!.licenseTypesTotal }})</span>
+      </a>
+      <a class="item-plus" routerLink="/license-types/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Thématiques')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/thematics">
+        Thématiques
+        <span class="item-count" *ngIf="counts.counts?.themesTotal != null">({{ counts.counts!.themesTotal }})</span>
+      </a>
+      <a class="item-plus" routerLink="/thematics/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Centres pilotes')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/pilot-centers">
+        Centres pilotes
+        <span class="item-count" *ngIf="counts.counts?.pilotCentersTotal != null">({{ counts.counts!.pilotCentersTotal }})</span>
+      </a>
+      <a class="item-plus" routerLink="/pilot-centers/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Organismes')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/organisms">
+        Organismes
+        <span class="item-count" *ngIf="counts.counts?.organismsTotal != null">({{ counts.counts!.organismsTotal }})</span>
+      </a>
+      <a class="item-plus" routerLink="/organisms/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Centres de formation')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/training-centers">
+        Centres de formation
+        <span class="item-count" *ngIf="counts.counts?.trainingCentersActive != null">({{ counts.counts!.trainingCentersActive }})</span>
+      </a>
+      <a class="item-plus" routerLink="/training-centers/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Agréments centres')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/center-accreditations">
+        Agréments centres
+        <span class="item-count" *ngIf="counts.counts?.centerAccreditationsActive != null">({{ counts.counts!.centerAccreditationsActive }})</span>
+      </a>
+      <a class="item-plus" routerLink="/center-accreditations/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Agréments formations')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/training-accreditations">
+        Agréments formations
+        <span class="item-count" *ngIf="counts.counts?.trainingAccreditationsActive != null">({{ counts.counts!.trainingAccreditationsActive }})</span>
+      </a>
+      <a class="item-plus" routerLink="/training-accreditations/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Sous-modules')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/sub-modules">
+        Sous-modules
+        <span class="item-count" *ngIf="counts.counts?.subModulesActive != null">({{ counts.counts!.subModulesActive }})</span>
+      </a>
+      <a class="item-plus" routerLink="/sub-modules/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Activités de formation')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/training-activities">
+        Activités de formation
+        <span class="item-count" *ngIf="counts.counts?.activitiesTotal != null">({{ counts.counts!.activitiesTotal }})</span>
+      </a>
+      <a class="item-plus" routerLink="/training-activities/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Secteurs')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/sectors">
+        Secteurs
+        <span class="item-count" *ngIf="counts.counts?.sectorsTotal != null">({{ counts.counts!.sectorsTotal }})</span>
+      </a>
+      <a class="item-plus" routerLink="/sectors/new">+</a>
+    </div>
+
+    <div *ngIf="matches('Formateur·trices')" class="item-row" routerLinkActive="active">
+      <a class="item-label" routerLink="/trainers">
+        Formateur·trices
+        <span class="item-count" *ngIf="counts.counts?.trainersActive != null">({{ counts.counts!.trainersActive }})</span>
+      </a>
+      <a class="item-plus" routerLink="/trainers/new">+</a>
+    </div>
+  </nav>
+
+  <!-- =========================
+       ADMIN uniquement
+       ========================= -->
+  <div *hasRole="['ADMIN']">
+    <div class="divider"></div>
+
+    <div class="section-title">
+      <span>ADMINISTRATION</span>
+    </div>
+
+    <nav class="menu">
+      <div *ngIf="matches('Gestion des utilisateurs')" class="item-row" routerLinkActive="active">
+        <a class="item-label" routerLink="/users">Gestion des utilisateurs</a>
+        <a class="item-plus" routerLink="/users/new">+</a>
+      </div>
+
+      <a *ngIf="matches('Importation de données')" class="item" routerLink="/import" routerLinkActive="active">
+        Importation de données
+      </a>
+    </nav>
+  </div>
+
+  <div class="divider"></div>
+</aside>

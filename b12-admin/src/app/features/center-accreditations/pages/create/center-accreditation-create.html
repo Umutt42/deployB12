@@ -1,0 +1,292 @@
+<div class="app-shell">
+  <app-topbar></app-topbar>
+
+  <div class="content-shell">
+    <app-sidebar></app-sidebar>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <div class="breadcrumb">
+            <a class="crumb-link" routerLink="/center-accreditations">Agréments centres</a><span class="crumb-sep">›</span><span>Ajouter</span>
+          </div>
+          <h1>Ajouter un ou plusieurs agréments centre</h1>
+        </div>
+        <a class="btn-secondary" routerLink="/center-accreditations">Retour</a>
+      </div>
+
+      <div class="table-card">
+        <div class="form" [formGroup]="form">
+
+          <!-- BATCH HEADER -->
+          <div class="batch-head">
+            <div class="batch-title">
+              <strong>{{ pendingCount }}</strong> agrément(s) en attente
+              <span *ngIf="successCount > 0" class="pill pill-success">
+                {{ successCount }} créé(s) avec succès
+              </span>
+            </div>
+            <button class="btn-secondary" type="button" (click)="addItem()" [disabled]="loading">
+              + Ajouter un agrément
+            </button>
+          </div>
+
+          <!-- ERREUR GLOBALE -->
+          <div *ngIf="error" class="error">{{ error }}</div>
+
+          <!-- LISTE DES AGRÉMENTS -->
+          <div class="batch-list" formArrayName="items">
+            <div
+              class="accreditation-item"
+              *ngFor="let g of items.controls; let i = index"
+              [formGroupName]="i"
+              [hidden]="rowStates[i]?.status === 'success'"
+            >
+
+              <!-- HEADER LIGNE -->
+              <div class="item-head">
+                <div class="item-left">
+                  <div class="item-number">Agrément #{{ i + 1 }}</div>
+                  <span
+                    class="pill"
+                    [ngClass]="{
+                      'pill-saving':  rowStates[i]?.status === 'saving',
+                      'pill-success': rowStates[i]?.status === 'success',
+                      'pill-error':   rowStates[i]?.status === 'error'
+                    }"
+                  >
+                    {{ rowStates[i]?.status === 'saving'  ? 'Enregistrement...'
+                      : rowStates[i]?.status === 'success' ? 'OK'
+                      : rowStates[i]?.status === 'error'   ? 'Erreur'
+                      : 'Prêt' }}
+                  </span>
+                </div>
+                <button
+                  class="icon-danger"
+                  type="button"
+                  (click)="removeItem(i)"
+                  [disabled]="items.length <= 1 || loading"
+                  title="Supprimer cet agrément"
+                >🗑</button>
+              </div>
+
+              <!-- =============================================
+                   CENTRE DE FORMATION
+              ============================================== -->
+              <div class="section-head">
+                <h2>Centre de formation</h2>
+                <p class="muted">Les champs marqués * sont obligatoires.</p>
+              </div>
+
+              <div class="row">
+                <select formControlName="trainingCenterId">
+                  <option [ngValue]="null">-- Sélectionner un centre --</option>
+                  <option *ngFor="let tc of trainingCenters" [ngValue]="tc.id">
+                    {{ tc.name }}{{ tc.companyNumber ? '  ·  ' + tc.companyNumber : '' }}
+                  </option>
+                </select>
+                <div class="field-error" *ngIf="g.get('trainingCenterId')?.touched && g.get('trainingCenterId')?.invalid">
+                  Le centre de formation est obligatoire.
+                </div>
+              </div>
+
+              <!-- =============================================
+                   AGRÉMENT
+              ============================================== -->
+              <div class="section-head">
+                <h2>Agrément</h2>
+              </div>
+
+              <div class="grid-2">
+                <div class="row">
+                  <label>Numéro d'agrément</label>
+                  <input type="text" formControlName="accreditationNumber" maxlength="60" placeholder="Ex: 21" />
+                </div>
+
+                <div class="row">
+                  <label>Statut de la demande</label>
+                  <select formControlName="requestStatus">
+                    <option value="">-- Sélectionner --</option>
+                    <option *ngFor="let opt of statusOptions" [value]="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="row">
+                  <label>Date de réception</label>
+                  <input type="date" formControlName="receivedDate" />
+                </div>
+
+                <div class="row"><!-- spacer --></div>
+
+                <div class="row">
+                  <label>Début de l'agrément</label>
+                  <input type="date" formControlName="startDate" />
+                </div>
+
+                <div class="row">
+                  <label>Fin de l'agrément</label>
+                  <input type="date" formControlName="endDate" />
+                  <div class="field-error" *ngIf="items.at(i).hasError('endBeforeStart')">
+                    La date de fin ne peut pas être antérieure à la date de début.
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid-2 grid-checkboxes">
+                <div class="row">
+                  <label class="checkbox-row">
+                    <input type="checkbox" formControlName="initial" />
+                    <span>Agrément initial</span>
+                  </label>
+                </div>
+                <div class="row">
+                  <label class="checkbox-row">
+                    <input type="checkbox" formControlName="continuous" />
+                    <span>Agrément continu</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- =============================================
+                   ADRESSES DE SITES DE FORMATION
+              ============================================== -->
+              <div class="section-head">
+                <div class="section-head-row">
+                  <div>
+                    <h2>Adresses de sites de formation</h2>
+                    <p class="muted">Sites physiques où se déroulent les formations.</p>
+                  </div>
+                  <button type="button" class="btn-secondary" (click)="addAddress(i)" [disabled]="loading">
+                    + Ajouter une adresse
+                  </button>
+                </div>
+              </div>
+
+              <p class="empty-hint" *ngIf="getAddresses(i).length === 0">
+                Aucune adresse ajoutée.
+              </p>
+
+              <div class="batch-list" formArrayName="trainingSiteAddresses">
+                <div
+                  class="batch-item"
+                  *ngFor="let addr of getAddresses(i).controls; let j = index"
+                  [formGroupName]="j"
+                >
+                  <div class="item-head">
+                    <span class="item-number">Adresse #{{ j + 1 }}</span>
+                    <button type="button" class="icon-danger" (click)="removeAddress(i, j)" title="Supprimer">✕</button>
+                  </div>
+                  <div class="grid-2">
+                    <div class="row">
+                      <label>Rue</label>
+                      <input type="text" formControlName="street" maxlength="180" placeholder="Ex: Rue de Namur" />
+                    </div>
+                    <div class="row">
+                      <label>Numéro</label>
+                      <input type="text" formControlName="number" maxlength="30" placeholder="Ex: 12A" />
+                    </div>
+                    <div class="row">
+                      <label>Code postal</label>
+                      <input type="text" formControlName="postalCode" maxlength="20" placeholder="Ex: 5000" (input)="onAddressPostalCodeInput(i, j)" />
+                    </div>
+                    <div class="row">
+                      <label>Ville</label>
+                      <input type="text" formControlName="city" maxlength="120" placeholder="Ex: Namur" />
+                    </div>
+                    <div class="row">
+                      <label>Province</label>
+                      <input type="text" formControlName="province" maxlength="120" placeholder="Ex: Namur (NA)" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- =============================================
+                   PERSONNES DE CONTACT
+              ============================================== -->
+              <div class="section-head">
+                <div class="section-head-row">
+                  <div>
+                    <h2>Personnes de contact</h2>
+                    <p class="muted">Contacts liés à cet agrément.</p>
+                  </div>
+                  <button type="button" class="btn-secondary" (click)="addContact(i)" [disabled]="loading">
+                    + Ajouter un contact
+                  </button>
+                </div>
+              </div>
+
+              <p class="empty-hint" *ngIf="getContacts(i).length === 0">
+                Aucun contact ajouté.
+              </p>
+
+              <div class="batch-list" formArrayName="contactPeople">
+                <div
+                  class="batch-item"
+                  *ngFor="let contact of getContacts(i).controls; let j = index"
+                  [formGroupName]="j"
+                >
+                  <div class="item-head">
+                    <span class="item-number">Contact #{{ j + 1 }}</span>
+                    <button type="button" class="icon-danger" (click)="removeContact(i, j)" title="Supprimer">✕</button>
+                  </div>
+                  <div class="grid-2">
+                    <div class="row">
+                      <label>Prénom</label>
+                      <input type="text" formControlName="firstName" maxlength="120" placeholder="Ex: Jean-Nicolas" />
+                    </div>
+                    <div class="row">
+                      <label>Nom</label>
+                      <input type="text" formControlName="lastName" maxlength="120" placeholder="Ex: Arnould" />
+                    </div>
+                    <div class="row">
+                      <label>Fonction</label>
+                      <input type="text" formControlName="fonction" maxlength="120" placeholder="Ex: Responsable formation" />
+                    </div>
+                    <div class="row">
+                      <label>Email</label>
+                      <input type="email" formControlName="email" maxlength="180" placeholder="Ex: jn.arnould@exemple.be"
+                        (blur)="normalizeEmailBlur($event, contact.get('email'))" />
+                      <div class="field-error" *ngIf="contact.get('email')?.touched && contact.get('email')?.invalid">
+                        Adresse e-mail invalide.
+                      </div>
+                    </div>
+                    <div class="row">
+                      <label>Téléphone</label>
+                      <input type="text" formControlName="phone" maxlength="40" placeholder="Ex: +32 81 00 00 00"
+                        (blur)="formatPhoneBlur($event, contact.get('phone'))" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ERREUR LIGNE -->
+              <div *ngIf="rowStates[i]?.status === 'error' && rowStates[i]?.error" class="error">
+                {{ rowStates[i]?.error }}
+              </div>
+
+            </div>
+          </div>
+
+          <!-- =============================================
+               ACTIONS
+          ============================================== -->
+          <div class="actions">
+            <button class="btn-primary" type="button" (click)="submitAll('back')" [disabled]="loading">
+              {{ loading ? 'Enregistrement...' : 'Enregistrer tout' }}
+            </button>
+
+            <button class="btn-secondary" type="button" (click)="submitAll('stay')" [disabled]="loading">
+              Enregistrer &amp; continuer
+            </button>
+
+            <a class="btn-secondary" routerLink="/center-accreditations">Annuler</a>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

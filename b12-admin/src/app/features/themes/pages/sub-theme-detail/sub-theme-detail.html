@@ -1,0 +1,99 @@
+<div class="app-shell">
+    <app-topbar></app-topbar>
+  
+    <div class="content-shell">
+      <app-sidebar></app-sidebar>
+  
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="breadcrumb">
+              <a class="crumb-link" routerLink="/thematics">Thématiques</a>
+              <span class="crumb-sep">›</span>
+              <a class="crumb-link" [routerLink]="['/thematics', themeId]">Détail</a>
+              <span class="crumb-sep">›</span>
+              <span>Sous-thème</span>
+            </div>
+  
+            <h1>Modifier un sous-thème</h1>
+  
+            <div class="muted" *ngIf="st">
+              <span class="pill">Thème ID: {{ themeId }}</span>
+              <span class="pill">Sous-thème ID: {{ st.id }}</span>
+            </div>
+          </div>
+  
+          <div class="head-actions">
+            <a class="btn-secondary" [routerLink]="['/thematics', themeId]">Retour</a>
+          </div>
+        </div>
+  
+        <div class="card">
+          <div *ngIf="loading" class="muted">Chargement…</div>
+          <div *ngIf="!loading && error" class="error">{{ error }}</div>
+  
+          <form *ngIf="!loading && st" (ngSubmit)="save()">
+            <div class="grid">
+              <div class="field full">
+                <label>Nom</label>
+                <input
+                  type="text"
+                  [(ngModel)]="name"
+                  name="name"
+                  required
+                  placeholder="Ex: Échanges entre titulaires…"
+                />
+              </div>
+  
+              <div class="field full">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  [(ngModel)]="description"
+                  name="description"
+                  placeholder="Description du sous-thème…"
+                ></textarea>
+              </div>
+  
+              <div class="field">
+                <label>Heures</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  [(ngModel)]="hours"
+                  name="hours"
+                  placeholder="ex: 2"
+                />
+                <div class="hint">Laisse vide si non défini.</div>
+              </div>
+  
+              <div class="field">
+                <label class="inline">
+                  <input type="checkbox" [(ngModel)]="archived" name="archived" />
+                  Archivé
+                </label>
+                <div class="hint">Masquer ce sous-thème des listes actives.</div>
+              </div>
+            </div>
+  
+            <div class="actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                (click)="cancel()"
+                [disabled]="saving"
+              >
+                Annuler
+              </button>
+  
+              <button type="submit" class="btn-primary" [disabled]="saving">
+                {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+  

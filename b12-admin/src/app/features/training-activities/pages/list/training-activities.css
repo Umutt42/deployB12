@@ -1,0 +1,173 @@
+@import '../../../../shared/styles/list-page.css';
+
+/* ===================================================
+   TRAINING-ACTIVITIES — spécifique
+=================================================== */
+
+/* Head actions row */
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--radius-btn);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-secondary:hover { background: var(--bg-app); }
+
+.btn-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--primary);
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-stats:hover { background: #eef2f7; border-color: var(--primary); }
+
+/* Year tabs */
+.year-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.year-tab {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #cfd9e2;
+  background: #fff;
+  color: #1b6ea8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.year-tab:hover {
+  background: #eef6ff;
+  border-color: #9ec5fe;
+}
+
+.year-tab.active {
+  background: #4a7d96;
+  color: #fff;
+  border-color: #3c6a80;
+}
+
+/* Table min-width */
+.data-table { min-width: 1600px; }
+
+/* Column widths */
+.col-ta       { width: 280px; }
+.col-date     { width: 130px; }
+.col-num      { width: 100px; }
+.col-bool     { width: 90px; }
+.col-price    { width: 130px; }
+.col-address  { width: 160px; }
+.col-province { width: 130px; }
+.col-tags     { width: 200px; }
+
+.data-table td.col-rel { vertical-align: middle; }
+
+.theme-names    { font-weight: 600; color: #1f2a33; }
+.subtheme-names { font-size: 12px; color: #6c7a86; }
+
+.addr-main    { font-weight: 500; }
+.addr-sub     { font-size: 12px; }
+.col-created  { width: 180px; }
+.col-updated  { width: 180px; }
+.col-updatedby { width: 160px; }
+
+/* ===================================================
+   PAGINATION
+=================================================== */
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #cfd9e2;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a3b47;
+}
+
+.page-btn:hover:not(:disabled) { background: #f3f7fb; }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+.page-btn.active {
+  background: #4a7d96;
+  color: #fff;
+  border-color: #3c6a80;
+}
+
+.page-ellipsis {
+  padding: 0 4px;
+  color: #6c7a86;
+}
+
+/* ===================================================
+   FILTRE DATE DÉBUT
+=================================================== */
+
+.date-filter-group {
+  display: flex;
+  gap: 4px;
+}
+
+.date-filter-group select {
+  flex: 1;
+  min-width: 0;
+}
+
+.control-date-start { min-width: 320px; }
+
+/* ===================================================
+   CODE COULEUR — colonnes dates
+=================================================== */
+
+.row-green  { color: #16a34a; font-weight: 600; }
+.row-orange { color: #ea580c; font-weight: 600; }
+.row-red    { color: #dc2626; font-weight: 600; }

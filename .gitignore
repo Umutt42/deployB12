@@ -1,0 +1,45 @@
+####################################
+# Global
+####################################
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
+
+####################################
+# Node / Angular (b12-admin)
+####################################
+b12-admin/dist/
+b12-admin/.angular/
+b12-admin/.cache/
+b12-admin/.vite/
+b12-admin/npm-debug.log*
+b12-admin/yarn-debug.log*
+b12-admin/yarn-error.log*
+b12-admin/pnpm-debug.log*
+
+####################################
+# Java / Spring Boot / Maven (b12-api)
+####################################
+b12-api/target/
+b12-api/.classpath
+b12-api/.project
+b12-api/.settings/
+b12-api/.idea/
+b12-api/*.iml
+
+####################################
+# Maven Wrapper
+####################################
+b12-api/.mvn/wrapper/maven-wrapper.jar
+
+####################################
+# OS / Editor
+####################################
+*.bak
+*.orig
